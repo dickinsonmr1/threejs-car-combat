@@ -24,6 +24,9 @@ export interface IPlayerVehicle {
 
     tryBrake(): void;
 
+    getBrakeForceOnWheels(): number[];
+    getCurrentSlip(): number;
+
     setDrifting(): void;
 
     tryReverse(y: number): void;

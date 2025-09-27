@@ -42,6 +42,17 @@ export class RaycastVehicleObject implements IPlayerVehicle {
 
     private brakeForce: number = 50;
 
+    public getBrakeForceOnWheels(): number[] {
+        
+        let brakeForces: number[] = [];
+
+        this.raycastVehicle!.wheelInfos.forEach(wheel => {
+            brakeForces.push(wheel.brake);
+		});
+
+        return brakeForces;
+    }
+
     public getCurrentSpeed(): number {
         return Math.abs(this.forwardVelocity);
     }
@@ -63,6 +74,8 @@ export class RaycastVehicleObject implements IPlayerVehicle {
     /**
      *
      */
+
+    private currentSlip: number = 0;
 
     vehicleOverrideConfig: VehicleConfig;
 
@@ -218,11 +231,8 @@ export class RaycastVehicleObject implements IPlayerVehicle {
 
             scene.add(this.model);
         }
-
         
-        if(wheelModelData != null) {
-
-                    
+        if(wheelModelData != null) {                    
             let temp = wheelModelData.scene;
             temp.position.set(5, 5, 5);
             //scene.add(temp);
@@ -377,6 +387,45 @@ export class RaycastVehicleObject implements IPlayerVehicle {
          this.raycastVehicle?.setBrake(this.brakeForce, 1);        
     }
 
+    private getWheelDirections(wheel: CANNON.WheelInfo, chassisBody: CANNON.Body) {
+        const worldTransform = wheel.worldTransform;
+
+        // Forward is the wheel rolling direction (x-axis in wheel space)
+        const forward = new CANNON.Vec3(-1, 0, 0);
+        worldTransform.quaternion.vmult(forward, forward);
+
+        // Sideways is the axle direction (z-axis in wheel space)
+        const sideways = new CANNON.Vec3(0, 0, 1);
+        worldTransform.quaternion.vmult(sideways, sideways);
+
+        return { forward, sideways };
+    }
+
+    public getCurrentSlip(): number {
+        return this.currentSlip;
+    }
+
+    private getLateralSlip(): number {
+        let slip = 0;
+        let chassisBody = this.getCannonVehicleChassisBody()!;
+        for (const wheel of this.getRaycastVehicle()!.wheelInfos) {
+            if (!wheel.isInContact) continue;
+
+            const { sideways } = this.getWheelDirections(wheel, chassisBody);
+
+            // velocity at wheel contact point
+            const relPos = wheel.chassisConnectionPointWorld; // already in world space
+            const vel = new CANNON.Vec3();
+            chassisBody.getVelocityAtWorldPoint(relPos, vel);
+
+            // sideways velocity = lateral slip
+            const latVel = vel.dot(sideways);
+            slip = Math.max(slip, Math.abs(latVel));
+        }
+
+        return slip;
+    }
+
     setDrifting(): void {
         this.isDrifting = true;
     }
@@ -528,7 +577,10 @@ export class RaycastVehicleObject implements IPlayerVehicle {
 
     public update() {
         
-        //this.raycastVehicle?.updateVehicle(1);
+        //for (const [i, wheel] of this.raycastVehicle!.wheelInfos.entries()) {
+            //console.log(`Wheel ${i}: in contact = ${wheel.isInContact}`);
+        //}
+        this.currentSlip = this.getLateralSlip();
         
         this.chassis.update();  
 

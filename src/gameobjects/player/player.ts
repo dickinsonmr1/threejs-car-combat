@@ -760,10 +760,14 @@ export class Player {
         this.leftRearWheelDustEmitter.resume();
         this.rightRearWheelDustEmitter.resume();
 
-        let gameScene = <GameScene>this.scene;
-        let sound = gameScene.getAudioManager().getSound('brake', this.playerIndex);        
-        if(sound && !sound.isPlaying)
-            sound.play();
+        var brakeForces = this.vehicleObject.getBrakeForceOnWheels();
+        if(brakeForces.some(x => x > 0) && this.vehicleObject.getCurrentSpeed() > 1) {
+
+            let gameScene = <GameScene>this.scene;
+            let sound = gameScene.getAudioManager().getSound('brake', this.playerIndex);        
+            if(sound && !sound.isPlaying)
+                sound.play();
+        }
 
         this.throttle = 0.75;
     }

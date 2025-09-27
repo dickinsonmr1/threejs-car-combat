@@ -416,7 +416,12 @@ export default class GameScene extends THREE.Scene {
 
             "player4Status",
             "player4Target",
-            "QuadtreeTerrain"
+            "QuadtreeTerrain",
+
+            "Player1_currentMaxWheelSlip",
+            //"Player1_Front_Right_WheelSlip",
+            //"Player1_Back_Left_WheelSlip",
+            //"Player1_Back_Right_WheelSlip"
         ]);
         this.debugDivElementManager.hideAllElements();
        
@@ -1989,6 +1994,11 @@ export default class GameScene extends THREE.Scene {
 
         this.debugDivElementManager.updateElementText("player4Status", `Player 4 | position: ${Utility.ThreeVector3ToString(this.player4.getPosition())} | ${Utility.getEnumName(PlayerState, this.player4.playerState)} | velocity: ${Utility.CannonVec3ToString(this.player4.getChassisBody().velocity)}`);
         this.debugDivElementManager.updateElementText("player4Target", `Player 4 Target: ${Utility.ThreeVector3ToString(this.player4.target.groundTargetMesh.position)} | Distance: ${this.player1.getPosition().distanceTo(this.player4.getPosition()).toFixed(2)}`);
+
+        this.debugDivElementManager.updateElementText("Player1_currentMaxWheelSlip",  `Player1_currentMaxWheelSlip: ${this.player1.getVehicleObject().getCurrentSlip()}`);
+        //this.debugDivElementManager.updateElementText("Player1_Front_Right_WheelSlip", `Player1_Front_Right_WheelSlip Target: ${Utility.ThreeVector3ToString(this.player4.target.groundTargetMesh.position)} | Distance: ${this.player1.getPosition().distanceTo(this.player4.getPosition()).toFixed(2)}`);
+        //this.debugDivElementManager.updateElementText("Player1_Back_Left_WheelSlip",   `Player1_Back_Left_WheelSlip: ${this.player4.getVehicleObject().getwh)}`);
+        //this.debugDivElementManager.updateElementText("Player1_Back_Right_WheelSlip",  `Player1_Back_Right_WheelSlip: ${Utility.ThreeVector3ToString(this.player4.target.groundTargetMesh.position)} | Distance: ${this.player1.getPosition().distanceTo(this.player4.getPosition()).toFixed(2)}`);
 
         /*
         if(this.quadtreeTerrainSystem != null) {

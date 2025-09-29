@@ -93,6 +93,8 @@ export class Player {
     throttle: number = 0;
     currentRate: number = 1.0; // idle pitch
 
+    private brakeForces: number[] = [];
+    private currentWheelSlip: number = 0;
 
     leftRearWheelDustEmitter: ParticleTrailObject;
     rightRearWheelDustEmitter: ParticleTrailObject;
@@ -394,11 +396,13 @@ export class Player {
         }     
         */   
 
-        let gameScene = <GameScene>this.scene;
-        if(this.playerIndex === 0)
+        if(this.playerIndex === 0) {
             this.updateEngine(this.throttle);
-            //gameScene.getAudioManager().updatePlaybackRate('engine', this.engineSoundRate, this.playerIndex);        
 
+            this.currentWheelSlip = this.getVehicleObject().getCurrentSlip();
+            this.updateTireEffects();
+        }
+            
         if(!this.vehicleObject?.getChassis()?.body?.position) return;
 
         this.vehicleObject.update();
@@ -752,22 +756,49 @@ export class Player {
 
         this.throttle = 0;
     }
-        
-    tryReverse(joystickY: number): void {
-        this.vehicleObject.setDrifting();
-        this.vehicleObject.tryReverse(joystickY);
-        this.brakeLights.setVisible(true);
-        this.leftRearWheelDustEmitter.resume();
-        this.rightRearWheelDustEmitter.resume();
 
-        var brakeForces = this.vehicleObject.getBrakeForceOnWheels();
-        if(brakeForces.some(x => x > 0) && this.vehicleObject.getCurrentSpeed() > 1) {
+    updateTireEffects(): void {
+
+        if((this.brakeForces.some(x => x > 0) && this.vehicleObject.getCurrentSpeed() > 1)
+            || this.currentWheelSlip > 2) {
+
+            this.leftRearWheelDustEmitter.resume();
+            this.rightRearWheelDustEmitter.resume();
 
             let gameScene = <GameScene>this.scene;
             let sound = gameScene.getAudioManager().getSound('brake', this.playerIndex);        
             if(sound && !sound.isPlaying)
                 sound.play();
         }
+        else if(this.brakeForces.every(x => x === 0) && this.currentWheelSlip <= 2) {
+
+            this.leftRearWheelDustEmitter.pause();
+            this.rightRearWheelDustEmitter.pause();
+
+            let gameScene = <GameScene>this.scene;
+            let sound = gameScene.getAudioManager().getSound('brake', this.playerIndex);        
+            if(sound && sound.isPlaying)
+                sound.stop();
+        }
+        else {
+            this.leftRearWheelDustEmitter.pause();
+            this.rightRearWheelDustEmitter.pause();
+
+            let gameScene = <GameScene>this.scene;
+            let sound = gameScene.getAudioManager().getSound('brake', this.playerIndex);        
+            if(sound && sound.isPlaying)
+                sound.stop();
+        }
+    }
+        
+    tryReverse(joystickY: number): void {
+        this.vehicleObject.setDrifting();
+        this.vehicleObject.tryReverse(joystickY);
+        this.brakeLights.setVisible(true);
+        //this.leftRearWheelDustEmitter.resume();
+        //this.rightRearWheelDustEmitter.resume();
+
+        this.brakeForces = this.vehicleObject.getBrakeForceOnWheels();
 
         this.throttle = 0.75;
     }
@@ -775,8 +806,8 @@ export class Player {
     tryStopReverse(): void {
         this.vehicleObject.tryStopReverse();
         this.brakeLights.setVisible(false);
-        this.leftRearWheelDustEmitter.pause();
-        this.rightRearWheelDustEmitter.pause();
+        //this.leftRearWheelDustEmitter.pause();
+        //this.rightRearWheelDustEmitter.pause();
 
         let gameScene = <GameScene>this.scene;
         let sound = gameScene.getAudioManager().getSound('brake', this.playerIndex);        

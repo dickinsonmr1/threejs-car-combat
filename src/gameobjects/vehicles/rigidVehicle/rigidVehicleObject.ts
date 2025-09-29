@@ -334,4 +334,12 @@ export class RigidVehicleObject implements IPlayerVehicle {
             
         }
     }
+
+    getBrakeForceOnWheels(): number[] {
+        return [];
+    }
+    
+    getCurrentSlip(): number {
+        return -1;
+    }
 }

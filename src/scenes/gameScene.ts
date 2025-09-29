@@ -553,17 +553,17 @@ export default class GameScene extends THREE.Scene {
         //////////////////////////////////////
         // key currently down this frame
         //////////////////////////////////////
-        if(keyboardState.keys['ArrowUp']) {
+        if(keyboardState.keys['ArrowUp'] || keyboardState.keys['KeyW']) {
             this.player1.tryAccelerate(1.0);
         }
-        else if(keyboardState.keys['ArrowDown']) {
+        else if(keyboardState.keys['ArrowDown'] || keyboardState.keys['KeyS']) {
             this.player1.tryReverse(1.0);
         }
 
-        if(keyboardState.keys['ArrowLeft']) {
+        if(keyboardState.keys['ArrowLeft'] || keyboardState.keys['KeyA']) {
             this.player1.tryTurn(1.0);
         }
-        else if(keyboardState.keys['ArrowRight']) {
+        else if(keyboardState.keys['ArrowRight'] || keyboardState.keys['KeyD']) {
             this.player1.tryTurn(-1.0);
         }
         
@@ -690,16 +690,16 @@ export default class GameScene extends THREE.Scene {
 		}
 
         // player 1
-        if(keyboardState.keysReleasedThisFrame['ArrowUp']) {
+        if(keyboardState.keysReleasedThisFrame['ArrowUp'] || keyboardState.keysReleasedThisFrame['KeyW']) {
             this.player1.tryStopAccelerate();
         }
-        else if(keyboardState.keysReleasedThisFrame['ArrowDown']) {
+        else if(keyboardState.keysReleasedThisFrame['ArrowDown'] || keyboardState.keysReleasedThisFrame['KeyS']) {
             this.player1.tryStopReverse();
         }
-        if(keyboardState.keysReleasedThisFrame['ArrowLeft']) {
+        if(keyboardState.keysReleasedThisFrame['ArrowLeft'] || keyboardState.keysReleasedThisFrame['KeyA']) {
             this.player1.resetTurn();
         }
-        else if(keyboardState.keysReleasedThisFrame['ArrowRight']) {
+        else if(keyboardState.keysReleasedThisFrame['ArrowRight'] || keyboardState.keysReleasedThisFrame['KeyD']) {
             this.player1.resetTurn();
         }
         if(keyboardState.keysReleasedThisFrame['Space']) {

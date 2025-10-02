@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "prebuild": "tsc src/prebuild.ts",
+    "build": "npm run prebuild && vite build",
     "preview": "vite preview",
     "deploy": "gh-pages -d dist"
   },
   "devDependencies": {
+    "@types/node": "^24.6.2",
     "@types/three": "^0.159.0",
     "@types/uuid": "^9.0.7",
     "typescript": "^5.2.2",

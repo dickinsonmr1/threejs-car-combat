@@ -298,6 +298,19 @@
 			transition: width 0.3s ease;
 			z-index: 1;
 		}
+
+		#build-info {
+				position: absolute;
+				top: 2px;
+				left: 2px;
+				background-color: rgba(0, 0, 0, 0.8);
+				color: white;
+				align-items: left;
+				padding: 5px 10px;
+				border-radius: 5px;
+				font-family: Arial, sans-serif;
+				font-size: 14px;
+			}
 	</style>
 	<script src="https://kit.fontawesome.com/00bf9be869.js" crossorigin="anonymous"></script>
   </head>
@@ -423,8 +436,10 @@
 				<!-- dynamically generated buttons (menu-button-large) inserted here by SceneController based on records in worldLibrary.json -->
 			</div>
 		</div>
+		<div id="build-info"></div>
 	</div>
 	
+	<script type="module" src="/src/global.ts"></script>
     <script type="module" src="/src/main.ts"></script>
 	<script>
 		// prevent space bar from scrolling down page

@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { PositionalAudioHelper } from 'three/examples/jsm/helpers/PositionalAudioHelper.js';
+import { Player } from '../player/player';
 
 export class PositionalAudioParameters {
     positionalAudio?: THREE.PositionalAudio;
@@ -15,8 +16,9 @@ export class PositionalAudioObject {
 
     positionalAudio: THREE.PositionalAudio;
     helper?: PositionalAudioHelper;
+    parentPlayer?: Player;
 
-    constructor(scene: THREE.Scene, positionalAudio: THREE.PositionalAudio, position: THREE.Vector3, isDebug: boolean) {
+    constructor(scene: THREE.Scene, positionalAudio: THREE.PositionalAudio, position: THREE.Vector3, isDebug: boolean, parentPlayer?: Player) {
         /*       
         if(parameters.positionalAudio) {
             this.positionalAudio = parameters.positionalAudio;
@@ -41,13 +43,17 @@ export class PositionalAudioObject {
 
             scene.add(this.helper);          
         }
+        this.parentPlayer = parentPlayer;
     }
 
-    update(newPosition: THREE.Vector3) {
-        this.positionalAudio.position.copy(newPosition);
-        if(this.helper) {
-            this.helper.position.copy(newPosition);
-            this.helper.update();
+    update() {
+
+        if(this.parentPlayer) {
+            this.positionalAudio.position.copy(this.parentPlayer.getPosition());
+            if(this.helper) {
+                this.helper.position.copy(this.parentPlayer.getPosition());
+                this.helper.update();
+            }
         }
     }
 }

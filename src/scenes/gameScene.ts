@@ -1126,17 +1126,16 @@ export default class GameScene extends THREE.Scene {
         this.soundEffectLibraryConfig.forEach(async soundEffect => 
         {
             if(soundEffect.createInstancePerPlayer) {
-                for(var playerIndex = 0; playerIndex < numberOfPlayers; playerIndex++) {
+                this.allPlayers.forEach(async player => {
 
-                    let playerChassis = this.allPlayers.find(x => playerIndex === playerIndex)?.getVehicleObject().getChassis().mesh;
-                    
+                    let playerChassis = player.getVehicleObject().getChassis().mesh;                    
                     this.audioManager.addSoundObjectFromPositionalAudio(
                         soundEffect.soundKey!,
                         await this.audioManager.createPositionalAudioFromJsonConfig(soundEffect),
                         playerChassis?.position!,
-                        playerIndex
-                    );                              
-                }
+                        player                     
+                    );                                            
+                });
             }
             else {
                 this.audioManager.addSoundObjectFromPositionalAudio(

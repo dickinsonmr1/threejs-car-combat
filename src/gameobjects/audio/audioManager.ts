@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { SoundEffectConfig } from './config/soundEffectLibrary';
 import { PositionalAudioHelper } from 'three/examples/jsm/helpers/PositionalAudioHelper.js';
 import { PositionalAudioObject, PositionalAudioParameters } from './positionalAudioObject';
+import { Player } from '../player/player';
 
 export class AudioManager {
 
@@ -114,7 +115,7 @@ export class AudioManager {
       return `player${playerIndex+1}-`;
     }
     
-    private generateSoundKey(key: string, playerIndex?: number): string {
+    private generateSoundKey(key: string, playerIndex: number | undefined): string {
       let prefix = '';
       if(playerIndex != null)
         prefix = this.generatePlayerSpecificPrefix(playerIndex+1);
@@ -122,10 +123,11 @@ export class AudioManager {
       return `${prefix}${key}`;
     }
 
-    public addSoundObjectFromPositionalAudio(key: string, sound: THREE.PositionalAudio, position: THREE.Vector3, playerIndex?: number): void {      
+    public addSoundObjectFromPositionalAudio(key: string, sound: THREE.PositionalAudio, position: THREE.Vector3, player?: Player): void {      
+      
       this.positionalSounds.set(
-        this.generateSoundKey(key, playerIndex),
-        new PositionalAudioObject(this.scene, sound, position, this.isDebugEnabled)
+        this.generateSoundKey(key, player?.playerIndex),
+        new PositionalAudioObject(this.scene, sound, position, this.isDebugEnabled, player)
       );
     }
 
@@ -211,8 +213,8 @@ export class AudioManager {
             audioContext.resume().then(() => console.log('AudioContext resumed'));
         }
 
-        if(this.isDebugEnabled)
-          this.positionalSounds.forEach(x => x.helper?.update());
+        //if(this.isDebugEnabled)
+          this.positionalSounds.forEach(x => x.update());
     }
 
     public getAllSounds(): Map<string, PositionalAudioObject> {

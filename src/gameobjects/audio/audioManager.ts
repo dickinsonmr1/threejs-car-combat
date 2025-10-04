@@ -1,15 +1,18 @@
 import * as THREE from 'three'
 import { SoundEffectConfig } from './config/soundEffectLibrary';
+import { PositionalAudioHelper } from 'three/examples/jsm/helpers/PositionalAudioHelper.js';
+import { PositionalAudioObject, PositionalAudioParameters } from './positionalAudioObject';
 
 export class AudioManager {
 
     private audioListener: THREE.AudioListener
     private audioLoader: THREE.AudioLoader;
     private audioBuffers: Map<string, AudioBuffer>;
+    private audioHelpers: PositionalAudioHelper[] = [];
 
-    private positionalSounds: Map<string, THREE.PositionalAudio> = new Map<string, THREE.PositionalAudio>;
+    private positionalSounds: Map<string, PositionalAudioObject> = new Map<string, PositionalAudioObject>;
 
-    constructor(camera: THREE.Camera, private isEnabled: boolean) {        
+    constructor(private scene: THREE.Scene, camera: THREE.Camera, private isEnabled: boolean, private isDebugEnabled: boolean) {        
         this.audioLoader = new THREE.AudioLoader();
         this.audioListener = new THREE.AudioListener();
         this.audioBuffers = new Map();
@@ -32,6 +35,28 @@ export class AudioManager {
     public async loadPositionalSound(config: SoundEffectConfig): Promise<THREE.PositionalAudio> {
 
         return await this.createPositionalAudio(config.asset!, this.audioListener, config.volume!, config.refDistance!, config.maxDistance!, config.loop);
+    }
+
+    public async loadPositionalSoundWithParent(config: SoundEffectConfig, object: THREE.Object3D): Promise<THREE.PositionalAudio> {
+        let audio = await this.createPositionalAudio(config.asset!, this.audioListener, config.volume!, config.refDistance!, config.maxDistance!, config.loop);
+        audio.position.copy(object.position);
+        
+        if(this.isDebugEnabled) {
+          const helper = new PositionalAudioHelper(audio, 5);          
+          helper.position.copy(object.position);
+
+          object.add(helper);
+
+          this.audioHelpers.push(helper);
+          this.scene.add(helper);          
+        }
+              
+        object.add(audio);
+        return audio;
+    }
+
+    public setPositionalSoundPosition() {
+      return null;
     }
 
     private async loadAudio(url: string): Promise<AudioBuffer> {
@@ -63,8 +88,10 @@ export class AudioManager {
         positionalAudio.setLoop(loop == true);
         positionalAudio.setRolloffFactor(0.1);
         positionalAudio.setVolume(volume);        
-        //positionalAudio.position.set(100, 100, 100);
+        positionalAudio.position.set(10, 10, 10);
+        positionalAudio.setDirectionalCone(360, 360, 0.1)
         //positionalAudio.play();
+
     
         return positionalAudio;
     }    
@@ -82,24 +109,28 @@ export class AudioManager {
     }
 
     public addSound(key: string, sound: THREE.PositionalAudio, playerIndex?: number): void {      
-      this.positionalSounds.set(this.generateSoundKey(key, playerIndex), sound);
+      
+      let params = new PositionalAudioParameters();
+      params.positionalAudio = sound;
+
+      this.positionalSounds.set(this.generateSoundKey(key, playerIndex), new PositionalAudioObject(params));
     }
 
     public getSound(key: string, playerIndex?: number): THREE.PositionalAudio | null {
-      let sound = this.positionalSounds.get(this.generateSoundKey(key, playerIndex));
+      let sound = this.positionalSounds.get(this.generateSoundKey(key, playerIndex))?.positionalAudio;
       return sound ?? null;
     }
 
     public playLoopedSound(key: string, playerIndex?: number) {
       if(this.isEnabled) {
-        const sound = this.positionalSounds.get(this.generateSoundKey(key, playerIndex));
+        const sound = this.positionalSounds.get(this.generateSoundKey(key, playerIndex))?.positionalAudio;
         if(sound && !sound.isPlaying)
             sound.play();
       }
     }
 
     public playSound(key: string, detune: boolean, playerIndex?: number) {        
-      const sound = this.positionalSounds.get(this.generateSoundKey(key, playerIndex));
+      const sound = this.positionalSounds.get(this.generateSoundKey(key, playerIndex))?.positionalAudio;
       if(sound) {          
         if(sound.isPlaying)
           sound.stop();
@@ -114,7 +145,7 @@ export class AudioManager {
     }
 
     public playSoundIfNotCurrentlyPlaying(key: string, detune: boolean, playerIndex?: number) {
-      const sound = this.positionalSounds.get(this.generateSoundKey(key, playerIndex));
+      const sound = this.positionalSounds.get(this.generateSoundKey(key, playerIndex))?.positionalAudio;
       if(sound) {          
         if(sound.isPlaying)
           return;
@@ -129,7 +160,7 @@ export class AudioManager {
     }
 
     public updatePlaybackRate(key: string, playbackRate: number, playerIndex?: number) {
-      const sound = this.positionalSounds.get(this.generateSoundKey(key, playerIndex));
+      const sound = this.positionalSounds.get(this.generateSoundKey(key, playerIndex))?.positionalAudio;
       if(sound && this.isEnabled) {          
         if(!sound.isPlaying && this.isEnabled) {
           sound.play();          
@@ -140,7 +171,7 @@ export class AudioManager {
     }
 
     public stopSound(key: string, playerIndex?: number) {
-      const sound = this.positionalSounds.get(this.generateSoundKey(key, playerIndex));
+      const sound = this.positionalSounds.get(this.generateSoundKey(key, playerIndex))?.positionalAudio;
       if(sound && sound.isPlaying)
           sound.stop();        
     }
@@ -151,7 +182,7 @@ export class AudioManager {
         .filter(([key]) => key.includes(this.generatePlayerSpecificPrefix(playerIndex)))
         .map(([_, value]) => value);
 
-      matchingValues.forEach(x => x.stop());
+      matchingValues.forEach(x => x.positionalAudio.stop());
     }
 
     update(newListenerPosition: THREE.Vector3): void {
@@ -166,5 +197,16 @@ export class AudioManager {
         if (audioContext.state === 'suspended') {
             audioContext.resume().then(() => console.log('AudioContext resumed'));
         }
+
+        if(this.isDebugEnabled)
+          this.updateHelpers();
+    }
+
+    private updateHelpers() {
+      this.audioHelpers.forEach(x => x.update());
+    }
+
+    public getAllSounds(): Map<string, PositionalAudioObject> {
+      return this.positionalSounds;
     }
 }

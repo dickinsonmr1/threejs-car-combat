@@ -220,7 +220,7 @@ export default class GameScene extends THREE.Scene {
         
         this.camera = camera;
 
-        this.audioManager = new AudioManager(this.camera, gameConfig.isSoundEnabled);
+        this.audioManager = new AudioManager(this, this.camera, gameConfig.isSoundEnabled, gameConfig.isDebug);
         // asset from here: https://opengameart.org/content/light-machine-gun
         // asset from here: https://opengameart.org/content/q009s-weapon-sounds
 
@@ -259,7 +259,7 @@ export default class GameScene extends THREE.Scene {
 
         await this.loadVehicleAssets();
 
-        await this.loadSoundEffects(4);
+        
 
         this.explosionTexture = this.textureLoader.load('assets/particles/particle-16x16.png');
         //this.explosionTexture = this.textureLoader.load('assets/tank_explosion3.png');
@@ -326,6 +326,7 @@ export default class GameScene extends THREE.Scene {
 
         await this.generatePlayers(particleMaterial, player1VehicleType);
 
+        await this.loadSoundEffects(4);
         
         //let sonicPulseEmitter = new SonicPulseEmitter(this, this.player1.getPosition());           
         //this.sonicPulseEmitters.push(sonicPulseEmitter);
@@ -419,6 +420,7 @@ export default class GameScene extends THREE.Scene {
             "QuadtreeTerrain",
 
             "Player1_currentMaxWheelSlip",
+            "PositionalSounds"
             //"Player1_Front_Right_WheelSlip",
             //"Player1_Back_Left_WheelSlip",
             //"Player1_Back_Right_WheelSlip"
@@ -1125,9 +1127,11 @@ export default class GameScene extends THREE.Scene {
         {
             if(soundEffect.createInstancePerPlayer) {
                 for(var playerIndex = 0; playerIndex < numberOfPlayers; playerIndex++) {
+
+                    let playerChassis = this.allPlayers.find(x => playerIndex === playerIndex)?.getVehicleObject().getChassis().mesh;
                     
                     this.audioManager.addSound(soundEffect.soundKey!,
-                        await this.audioManager.loadPositionalSound(soundEffect), playerIndex);      
+                        await this.audioManager.loadPositionalSoundWithParent(soundEffect, playerChassis!), playerIndex);      
                 }
             }
             else {
@@ -1996,6 +2000,9 @@ export default class GameScene extends THREE.Scene {
         this.debugDivElementManager.updateElementText("player4Target", `Player 4 Target: ${Utility.ThreeVector3ToString(this.player4.target.groundTargetMesh.position)} | Distance: ${this.player1.getPosition().distanceTo(this.player4.getPosition()).toFixed(2)}`);
 
         this.debugDivElementManager.updateElementText("Player1_currentMaxWheelSlip",  `Player1_currentMaxWheelSlip: ${this.player1.getVehicleObject().getCurrentSlip()}`);
+
+        let positionalSounds = this.getAudioManager().getAllSounds();
+        this.debugDivElementManager.updateElementText("PositionalSounds",  `Positional sounds: ${positionalSounds.size}`);
         //this.debugDivElementManager.updateElementText("Player1_Front_Right_WheelSlip", `Player1_Front_Right_WheelSlip Target: ${Utility.ThreeVector3ToString(this.player4.target.groundTargetMesh.position)} | Distance: ${this.player1.getPosition().distanceTo(this.player4.getPosition()).toFixed(2)}`);
         //this.debugDivElementManager.updateElementText("Player1_Back_Left_WheelSlip",   `Player1_Back_Left_WheelSlip: ${this.player4.getVehicleObject().getwh)}`);
         //this.debugDivElementManager.updateElementText("Player1_Back_Right_WheelSlip",  `Player1_Back_Right_WheelSlip: ${Utility.ThreeVector3ToString(this.player4.target.groundTargetMesh.position)} | Distance: ${this.player1.getPosition().distanceTo(this.player4.getPosition()).toFixed(2)}`);

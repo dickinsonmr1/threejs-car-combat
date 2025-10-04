@@ -1,5 +1,5 @@
 {    
-    "isDebug": false,
+    "isDebug": true,
     "controlType": 0,
     "isSoundEnabled": true,
     "gamePadAxesDeadZoneX": 0.15,

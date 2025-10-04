@@ -1130,22 +1130,29 @@ export default class GameScene extends THREE.Scene {
 
                     let playerChassis = this.allPlayers.find(x => playerIndex === playerIndex)?.getVehicleObject().getChassis().mesh;
                     
-                    this.audioManager.addSound(soundEffect.soundKey!,
-                        await this.audioManager.loadPositionalSoundWithParent(soundEffect, playerChassis!), playerIndex);      
+                    this.audioManager.addSoundObjectFromPositionalAudio(
+                        soundEffect.soundKey!,
+                        await this.audioManager.createPositionalAudioFromJsonConfig(soundEffect),
+                        playerChassis?.position!,
+                        playerIndex
+                    );                              
                 }
             }
             else {
-                this.audioManager.addSound(soundEffect.soundKey!,
-                    await this.audioManager.loadPositionalSound(soundEffect));    
+                this.audioManager.addSoundObjectFromPositionalAudio(
+                    soundEffect.soundKey!,
+                    await this.audioManager.createPositionalAudioFromJsonConfig(soundEffect),
+                    new THREE.Vector3(Math.random()*100-50, 5, Math.random()*100-50)
+                );    
             }
         });
 
-        this.audioManager.addSound(`fw_01`, await this.audioManager.loadPositionalSound({soundKey: 'fw_01', asset: 'assets/audio/fw_01.ogg', volume: 0.25, refDistance: 25, maxDistance: 100 }));
-        this.audioManager.addSound(`fw_02`, await this.audioManager.loadPositionalSound({soundKey: 'fw_02', asset: 'assets/audio/fw_02.ogg', volume: 0.25, refDistance: 25, maxDistance: 100 }));
-        this.audioManager.addSound(`fw_03`, await this.audioManager.loadPositionalSound({soundKey: 'fw_03', asset: 'assets/audio/fw_03.ogg', volume: 0.25, refDistance: 25, maxDistance: 100 }));
-        this.audioManager.addSound(`fw_04`, await this.audioManager.loadPositionalSound({soundKey: 'fw_04', asset: 'assets/audio/fw_04.ogg', volume: 0.25, refDistance: 25, maxDistance: 100 }));
-        this.audioManager.addSound(`fw_05`, await this.audioManager.loadPositionalSound({soundKey: 'fw_05', asset: 'assets/audio/fw_05.ogg', volume: 0.25, refDistance: 25, maxDistance: 100 }));
-        this.audioManager.addSound(`fw_06`, await this.audioManager.loadPositionalSound({soundKey: 'fw_06', asset: 'assets/audio/fw_06.ogg', volume: 0.25, refDistance: 25, maxDistance: 100 }));
+        this.audioManager.addSoundObjectFromPositionalAudio(`fw_01`, await this.audioManager.createPositionalAudioFromJsonConfig({soundKey: 'fw_01', asset: 'assets/audio/fw_01.ogg', volume: 0.25, refDistance: 25, maxDistance: 100 }), new THREE.Vector3(Math.random()*100-50, 5, Math.random()*100-50));
+        this.audioManager.addSoundObjectFromPositionalAudio(`fw_02`, await this.audioManager.createPositionalAudioFromJsonConfig({soundKey: 'fw_02', asset: 'assets/audio/fw_02.ogg', volume: 0.25, refDistance: 25, maxDistance: 100 }), new THREE.Vector3(Math.random()*100-50, 5, Math.random()*100-50));
+        this.audioManager.addSoundObjectFromPositionalAudio(`fw_03`, await this.audioManager.createPositionalAudioFromJsonConfig({soundKey: 'fw_03', asset: 'assets/audio/fw_03.ogg', volume: 0.25, refDistance: 25, maxDistance: 100 }), new THREE.Vector3(Math.random()*100-50, 5, Math.random()*100-50));
+        this.audioManager.addSoundObjectFromPositionalAudio(`fw_04`, await this.audioManager.createPositionalAudioFromJsonConfig({soundKey: 'fw_04', asset: 'assets/audio/fw_04.ogg', volume: 0.25, refDistance: 25, maxDistance: 100 }), new THREE.Vector3(Math.random()*100-50, 5, Math.random()*100-50));
+        this.audioManager.addSoundObjectFromPositionalAudio(`fw_05`, await this.audioManager.createPositionalAudioFromJsonConfig({soundKey: 'fw_05', asset: 'assets/audio/fw_05.ogg', volume: 0.25, refDistance: 25, maxDistance: 100 }), new THREE.Vector3(Math.random()*100-50, 5, Math.random()*100-50));
+        this.audioManager.addSoundObjectFromPositionalAudio(`fw_06`, await this.audioManager.createPositionalAudioFromJsonConfig({soundKey: 'fw_06', asset: 'assets/audio/fw_06.ogg', volume: 0.25, refDistance: 25, maxDistance: 100 }), new THREE.Vector3(Math.random()*100-50, 5, Math.random()*100-50));
     }
 
     async generatePlayers(particleMaterial: THREE.SpriteMaterial, player1VehicleType: VehicleType): Promise<void> {

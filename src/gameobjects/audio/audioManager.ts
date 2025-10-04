@@ -8,7 +8,6 @@ export class AudioManager {
     private audioListener: THREE.AudioListener
     private audioLoader: THREE.AudioLoader;
     private audioBuffers: Map<string, AudioBuffer>;
-    private audioHelpers: PositionalAudioHelper[] = [];
 
     private positionalSounds: Map<string, PositionalAudioObject> = new Map<string, PositionalAudioObject>;
 
@@ -32,11 +31,26 @@ export class AudioManager {
         return this.audioListener;
     }    
 
-    public async loadPositionalSound(config: SoundEffectConfig): Promise<THREE.PositionalAudio> {
+    // loads the THREE.PositionalAudio
+    public async createPositionalAudioFromJsonConfig(config: SoundEffectConfig): Promise<THREE.PositionalAudio> {
 
-        return await this.createPositionalAudio(config.asset!, this.audioListener, config.volume!, config.refDistance!, config.maxDistance!, config.loop);
+        const buffer = await this.loadAudio(config.asset!);
+
+        const positionalAudio = new THREE.PositionalAudio(this.audioListener);
+        positionalAudio.setBuffer(buffer);
+        positionalAudio.setRefDistance(config.refDistance!);
+        positionalAudio.setMaxDistance(config.maxDistance!);
+        positionalAudio.setLoop(config.loop == true);
+        positionalAudio.setRolloffFactor(0.1);
+        positionalAudio.setVolume(config.volume!);        
+        positionalAudio.position.set(10, 10, 10);
+        positionalAudio.setDirectionalCone(360, 360, 0.1)
+        //positionalAudio.play();
+            
+        return positionalAudio;
     }
 
+    /*
     public async loadPositionalSoundWithParent(config: SoundEffectConfig, object: THREE.Object3D): Promise<THREE.PositionalAudio> {
         let audio = await this.createPositionalAudio(config.asset!, this.audioListener, config.volume!, config.refDistance!, config.maxDistance!, config.loop);
         audio.position.copy(object.position);
@@ -54,6 +68,7 @@ export class AudioManager {
         object.add(audio);
         return audio;
     }
+    */
 
     public setPositionalSoundPosition() {
       return null;
@@ -91,8 +106,7 @@ export class AudioManager {
         positionalAudio.position.set(10, 10, 10);
         positionalAudio.setDirectionalCone(360, 360, 0.1)
         //positionalAudio.play();
-
-    
+            
         return positionalAudio;
     }    
 
@@ -108,12 +122,11 @@ export class AudioManager {
       return `${prefix}${key}`;
     }
 
-    public addSound(key: string, sound: THREE.PositionalAudio, playerIndex?: number): void {      
-      
-      let params = new PositionalAudioParameters();
-      params.positionalAudio = sound;
-
-      this.positionalSounds.set(this.generateSoundKey(key, playerIndex), new PositionalAudioObject(params));
+    public addSoundObjectFromPositionalAudio(key: string, sound: THREE.PositionalAudio, position: THREE.Vector3, playerIndex?: number): void {      
+      this.positionalSounds.set(
+        this.generateSoundKey(key, playerIndex),
+        new PositionalAudioObject(this.scene, sound, position, this.isDebugEnabled)
+      );
     }
 
     public getSound(key: string, playerIndex?: number): THREE.PositionalAudio | null {
@@ -199,11 +212,7 @@ export class AudioManager {
         }
 
         if(this.isDebugEnabled)
-          this.updateHelpers();
-    }
-
-    private updateHelpers() {
-      this.audioHelpers.forEach(x => x.update());
+          this.positionalSounds.forEach(x => x.helper?.update());
     }
 
     public getAllSounds(): Map<string, PositionalAudioObject> {

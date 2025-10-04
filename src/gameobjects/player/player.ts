@@ -1,6 +1,5 @@
 // import { v4 as uuidv4 } from 'uuid';
 import { ProjectileType } from "../weapons/projectileType";
-import HealthBar from "../healthBar";
 import { Utility } from "../../utility";
 import Headlights from "../vehicles/headLights";
 import * as THREE from "three";
@@ -302,7 +301,7 @@ export class Player {
         this.vehicleObject.getChassis().mesh.add(audioManager.getSound('engine', this.playerIndex)!);
         this.vehicleObject.getChassis().mesh.add(audioManager.getSound('brake', this.playerIndex)!);
         */
-       
+
         //this.rocketSoundMarker = new THREE.Mesh(new THREE.SphereGeometry(1.5), new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true }));
         //this.bulletSoundMarker = new THREE.Mesh(new THREE.SphereGeometry(1.5), new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true }));
         //scene.add(this.rocketSoundMarker);

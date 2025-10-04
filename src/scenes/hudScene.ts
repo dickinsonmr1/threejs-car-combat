@@ -24,6 +24,7 @@ export default class HudScene extends THREE.Scene {
 
     private meshHealthBars: MeshHealthBar[] = [];
 
+    private player1Id!: string;
 
     weaponInventory: THREE.Texture[] = [];
     selectedWeaponIndex: number = 0;
@@ -137,6 +138,7 @@ export default class HudScene extends THREE.Scene {
         player4Id: string, player4MaxHealth: number
     ) {
 
+        this.player1Id = player1Id;
         this.meshHealthBars.push(new MeshHealthBar(this, player1Id, player1MaxHealth));//, new THREE.Color('red')));
         this.meshHealthBars.push(new MeshHealthBar(this, player2Id, player2MaxHealth));//, new THREE.Color('blue')));
         this.meshHealthBars.push(new MeshHealthBar(this, player3Id, player3MaxHealth));//, new THREE.Color('green')));
@@ -213,7 +215,7 @@ export default class HudScene extends THREE.Scene {
         let healthBar = this.meshHealthBars.find(x => x.playerId == playerId);
         if(healthBar != null) {
             healthBar.updateValue(currentHealth);
-            healthBar?.setVisible(currentHealth > 0 && distanceFromCamera < 25);
+            healthBar?.setVisible(currentHealth > 0 && distanceFromCamera < 25 && playerId != this.player1Id);
         }            
     }
 

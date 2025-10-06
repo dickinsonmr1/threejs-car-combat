@@ -1,6 +1,5 @@
 import * as THREE from 'three'
 import { SoundEffectConfig } from './config/soundEffectLibrary';
-import { PositionalAudioHelper } from 'three/examples/jsm/helpers/PositionalAudioHelper.js';
 import { PositionalAudioObject, PositionalAudioParameters } from './positionalAudioObject';
 import { Player } from '../player/player';
 
@@ -38,6 +37,7 @@ export class AudioManager {
         const buffer = await this.loadAudio(config.asset!);
 
         const positionalAudio = new THREE.PositionalAudio(this.audioListener);
+        positionalAudio.name = config.asset!;
         positionalAudio.setBuffer(buffer);
         positionalAudio.setRefDistance(config.refDistance!);
         positionalAudio.setMaxDistance(config.maxDistance!);
@@ -91,25 +91,7 @@ export class AudioManager {
             reject
           );
         });
-      }
-
-    private async createPositionalAudio(asset: string, listener: THREE.AudioListener, volume: number, refDistance: number, maxDistance: number, loop?: boolean): Promise<THREE.PositionalAudio> {//} | null {
-
-        const buffer = await this.loadAudio(asset);
-
-        const positionalAudio = new THREE.PositionalAudio(listener);
-        positionalAudio.setBuffer(buffer);
-        positionalAudio.setRefDistance(refDistance);
-        positionalAudio.setMaxDistance(maxDistance);
-        positionalAudio.setLoop(loop == true);
-        positionalAudio.setRolloffFactor(0.1);
-        positionalAudio.setVolume(volume);        
-        positionalAudio.position.set(10, 10, 10);
-        positionalAudio.setDirectionalCone(360, 360, 0.1)
-        //positionalAudio.play();
-            
-        return positionalAudio;
-    }    
+      } 
 
     private generatePlayerSpecificPrefix(playerIndex: number): string {
       return `player${playerIndex+1}-`;

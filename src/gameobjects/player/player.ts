@@ -150,6 +150,12 @@ export class Player {
     vehicleType: VehicleType;
     specialType: SpecialType;
 
+    private maxSoundEffectIndex: number = 0;
+
+    public getNextAvailableSoundEffectIndex(): number {
+        return this.maxSoundEffectIndex++;
+    }
+
     constructor(scene: THREE.Scene,
         public playerIndex: number,
         isDebug: boolean,

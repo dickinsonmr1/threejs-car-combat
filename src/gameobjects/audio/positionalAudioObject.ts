@@ -17,6 +17,8 @@ export class PositionalAudioObject {
     positionalAudio: THREE.PositionalAudio;
     helper?: PositionalAudioHelper;
     helperLabel?: THREE.Sprite;
+
+    isPaused: boolean = false;
     
     parentPlayer?: Player;
     parentPlayerSoundIndex: number = 0;    

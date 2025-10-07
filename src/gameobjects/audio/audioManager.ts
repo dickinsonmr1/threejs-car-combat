@@ -182,6 +182,22 @@ export class AudioManager {
       matchingValues.forEach(x => x.positionalAudio.stop());
     }
 
+    public pauseAllPlayingSounds() {      
+      this.positionalSounds.forEach(x => {
+        if(x.positionalAudio.isPlaying)
+          x.isPaused = true;
+          x.positionalAudio.pause();
+      });
+    }
+
+    public resumeAllPausedSounds() {
+      this.positionalSounds.forEach(x => {
+        if(x.isPaused)
+          x.positionalAudio.play();
+          x.isPaused = false;
+      });
+    }
+
     update(newListenerPosition: THREE.Vector3): void {
         this.audioListener.position.copy(newListenerPosition);
         

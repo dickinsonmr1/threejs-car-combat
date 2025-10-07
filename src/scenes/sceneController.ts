@@ -831,10 +831,12 @@ export default class SceneController {
             if(this.gameScene?.isPaused) {
                 this.gamePausedDivElement.style.visibility = "visible";
                 this.inGameOnScreenControlsDiv.style.visibility = "hidden";
+                this.gameScene.getAudioManager().pauseAllPlayingSounds();
             }
             else {
                 this.gamePausedDivElement.style.visibility = "hidden";
                 this.inGameOnScreenControlsDiv.style.visibility = "visible";
+                this.gameScene!.getAudioManager().resumeAllPausedSounds();
             }
         }
     }

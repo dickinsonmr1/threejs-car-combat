@@ -1637,7 +1637,7 @@ export default class GameScene extends THREE.Scene {
             
         });
 
-        if(!this.player1 || this.player1.isVehicleObjectNull()) return;
+        if(!this.player1 || this.player1.isVehicleObjectNull() || this.isPaused) return;
 
         //this.updateInput(this.sceneController.keyDown);        
         

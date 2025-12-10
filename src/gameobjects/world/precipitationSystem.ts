@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { IPrecipitationSystem } from './IPrecipitationSystem';
 
 export enum PrecipitationType {
     None = 0,
@@ -6,8 +7,9 @@ export enum PrecipitationType {
     Snow = 2
 }
 
-export class PrecipitationSystem {
+export class PrecipitationSystem implements IPrecipitationSystem {
 
+    public object: THREE.Points;
     private static rainCount: number = 20000;
     rainGeometry: THREE.BufferGeometry;
     private static maxY: number = 50;
@@ -16,6 +18,7 @@ export class PrecipitationSystem {
 
     constructor(scene: THREE.Scene, mapSize: number, precipitationType: PrecipitationType, horizontalScale: number) {
 
+        this.object = new THREE.Points;
         // Create an empty geometry
         this.rainGeometry = new THREE.BufferGeometry();
 
@@ -23,8 +26,6 @@ export class PrecipitationSystem {
 
         // Create an array to hold the positions of the raindrops
         const positions = new Float32Array(PrecipitationSystem.rainCount * 3);
-
-        let rand
 
         for (let i = 0; i < PrecipitationSystem.rainCount; i++) {
             positions[i * 3] = Math.random() * (mapSize * horizontalScale) - (mapSize * horizontalScale / 2); // x position
@@ -60,7 +61,7 @@ export class PrecipitationSystem {
         scene.add(rain);
     }
 
-    animateRain(): void {
+    update(delta: number, camera: THREE.Camera): void {
         const positions = this.rainGeometry.attributes.position.array as Float32Array;
             
         for (let i = 0; i < PrecipitationSystem.rainCount; i++) {

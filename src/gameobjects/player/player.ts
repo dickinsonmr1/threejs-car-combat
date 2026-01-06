@@ -167,6 +167,9 @@ export class Player {
             case VehicleType.Tank:
             case VehicleType.Tanker:
                 return "engineLarge";
+            case VehicleType.RaceCar:
+            case VehicleType.RaceCarRed:
+                return "engineRally";
             default:
                 return "engine";
         }

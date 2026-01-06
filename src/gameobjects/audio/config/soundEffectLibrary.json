@@ -110,6 +110,16 @@
         "comment": "https://pixabay.com/sound-effects/engine-47745/"
     },
     {
+        "soundKey": "engineLarge",
+        "asset": "assets/audio/engine-61234-loop.ogg",
+        "volume": 0.75,
+        "refDistance": 25,
+        "maxDistance": 100,
+        "loop": true,
+        "createInstancePerPlayer": true,
+        "comment": "https://pixabay.com/sound-effects/engine-61234/"
+    },
+    {
         "soundKey": "brake",
         "asset": "assets/audio/tire-squeal.ogg",
         "volume": 0.75,

@@ -156,6 +156,26 @@ export class Player {
         return this.maxSoundEffectIndex++;
     }
 
+    private getEngineSoundKey(): string {
+        switch(this.vehicleType) {
+            case VehicleType.Ambulance:
+            case VehicleType.FireTruck:
+            case VehicleType.Harvester:
+            case VehicleType.Killdozer:
+            case VehicleType.PoliceTractor:
+            case VehicleType.TrashTruck:
+            case VehicleType.Tank:
+            case VehicleType.Tanker:
+                return "engineLarge";
+            case VehicleType.RaceCar:
+            case VehicleType.RaceCarRed:
+                return "engineRally";
+            default:
+                return "engine";
+        }
+
+    }
+
     constructor(scene: THREE.Scene,
         public playerIndex: number,
         isDebug: boolean,
@@ -1348,7 +1368,7 @@ export class Player {
         this.currentRate = THREE.MathUtils.lerp(this.currentRate, targetRate, smoothness);
 
         let gameScene = <GameScene>this.scene;
-        let sound = gameScene.getAudioManager().getSound('engine', this.playerIndex);        
+        let sound = gameScene.getAudioManager().getSound(this.getEngineSoundKey(), this.playerIndex);        
         if(sound && !sound.isPlaying) {
             sound.play();
         }

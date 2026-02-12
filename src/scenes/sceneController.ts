@@ -773,7 +773,8 @@ export default class SceneController {
                 .name('Scene Fog Far')
                 .listen();
 
-            if(this.gameScene?.precipitationSystem != null) {
+            /*
+            if(this.gameScene?.precipitationSystem != null && this.gameScene?.precipitationSystem!.) {
             const weatherFolder = this.gui.addFolder( 'Weather Config' );
             weatherFolder.add(worldConfig, 'precipitationType', { None: 0, Rain: 1, Snow: 2 })
                 .listen();
@@ -782,6 +783,7 @@ export default class SceneController {
                 .listen();
 
             }
+            */
 
             const playerFolder = this.gui.addFolder('Player 1 Config').close();
             // wheels
@@ -945,6 +947,12 @@ export default class SceneController {
     private updateGameScene(isPaused: boolean) {
         if(!isPaused) {
             this.gameScene?.updateWater();
+
+            //console.log({
+                //isWebGL2: this.renderer.capabilities.isWebGL2,
+                //rainCount: this.gameScene?.precipitationSystem.object.geometry.getDrawRange(),
+                //materialUniforms: this.gameScene?.precipitationSystem.object.material.uniforms,
+            //});
             this.gameScene?.updatePrecipitation();
 
             this.gameScene?.preUpdate();

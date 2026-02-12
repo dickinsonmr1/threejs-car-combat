@@ -46,7 +46,9 @@ import { ExplosionGpuParticleEmitter } from '../gameobjects/fx/explosionGpuParti
 import { Lightning, LightningType } from '../gameobjects/weapons/lightning';
 import VehicleLibrary from '../gameobjects/vehicles/config/vehicleLibrary';
 import KeyboardState from './keyboardState';
-
+import { IPrecipitationSystem } from '../gameobjects/world/IPrecipitationSystem';
+import { PrecipitationSystemGpu } from '../gameobjects/world/precipitationSystemGpu';
+import { GpuRainMinimal } from '../gameobjects/world/gpuRainMinimal';
 
 // npm install cannon-es-debugger
 // https://youtu.be/Ht1JzJ6kB7g?si=jhEQ6AHaEjUeaG-B&t=291
@@ -178,7 +180,7 @@ export default class GameScene extends THREE.Scene {
     quadtreeTerrainSystem5!: QuadtreeTerrainSystem5;
 
     water!: Water;
-    precipitationSystem!: PrecipitationSystem;
+    precipitationSystem!: IPrecipitationSystem;
 
     grassBillboards?: THREE.Points;
     
@@ -331,8 +333,8 @@ export default class GameScene extends THREE.Scene {
         //let sonicPulseEmitter = new SonicPulseEmitter(this, this.player1.getPosition());           
         //this.sonicPulseEmitters.push(sonicPulseEmitter);
 
-        let material = new THREE.SpriteMaterial( { map: this.crosshairTexture, color: 0xffffff, depthTest: false, depthWrite: false });//,transparent: true, opacity: 0.5 } );
-        this.crosshairSprite = new THREE.Sprite( material );
+        let crosshairMaterial = new THREE.SpriteMaterial( { map: this.crosshairTexture, color: 0xffffff, depthTest: false, depthWrite: false });//,transparent: true, opacity: 0.5 } );
+        this.crosshairSprite = new THREE.Sprite( crosshairMaterial );
         this.add(this.crosshairSprite);
 
         var treeModelData = await this.gameAssetModelLoader.generateTreeModel();
@@ -455,6 +457,8 @@ export default class GameScene extends THREE.Scene {
 
         if(this.worldConfig.precipitationType != PrecipitationType.None) {
             this.precipitationSystem = new PrecipitationSystem(this, this.terrainChunk.heightMapLength, this.worldConfig.precipitationType, this.worldConfig.horizontalScale);
+            //this.precipitationSystem = new PrecipitationSystemGpu(this.sceneController.renderer, 256);
+            //this.precipitationSystem = new GpuRainMinimal(this, 15000, 50, 50);
         }
             
         //this.rainShaderParticleEmitter = new RainShaderParticleEmitter(this);
@@ -1616,7 +1620,9 @@ export default class GameScene extends THREE.Scene {
 
     updatePrecipitation() {
         if(this.precipitationSystem != null) {
-            this.precipitationSystem.animateRain();
+
+            const time = this.clock.getDelta();
+            this.precipitationSystem.update(time, this.camera);
         }
     }
 

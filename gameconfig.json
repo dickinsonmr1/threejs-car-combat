@@ -13,5 +13,9 @@
     "wheelGroundContactMaterialFriction": 1.2,
     "wheelGroundContactMaterialRestitution": 0.1,
     "contactEquationRelaxation": 3,
-    "contactEquationStiffness": 1e8
+    "contactEquationStiffness": 1e8,
+    
+    "overrideRenderResolution": true,
+    "renderResolutionOverrideX": 720,
+    "renderResolutionOverrideY": 480
 }

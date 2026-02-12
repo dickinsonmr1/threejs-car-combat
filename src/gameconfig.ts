@@ -18,6 +18,7 @@ export interface GameConfig {
     contactEquationRelaxation: number;
     contactEquationStiffness: number;
 
+    overrideRenderResolution: boolean;
     renderResolutionOverrideX?: number;
     renderResolutionOverrideY?: number;
 }

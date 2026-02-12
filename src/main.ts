@@ -20,7 +20,11 @@ const renderer = new THREE.WebGLRenderer({
   canvas: document.getElementById('app') as HTMLCanvasElement
 });
 
-renderer.setSize(gameConfig.renderResolutionOverrideX ?? window.innerWidth, gameConfig.renderResolutionOverrideY ?? window.innerHeight);
+if(gameConfig.overrideRenderResolution)
+  renderer.setSize(gameConfig.renderResolutionOverrideX ?? window.innerWidth, gameConfig.renderResolutionOverrideY ?? window.innerHeight);
+else
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
 renderer.domElement.style.width = "100%";  // scaled to window
 renderer.domElement.style.height = "100%";
 renderer.shadowMap.enabled = true;

@@ -130,6 +130,8 @@ export class Player {
     lightningActive: boolean = false;
 
     shovelBoundingMesh: THREE.Mesh;
+
+    bulletLaunchOffset: THREE.Vector3 = new THREE.Vector3();
     
     private activeAirstrike!: Projectile;
 
@@ -434,6 +436,10 @@ export class Player {
 
         this.vehicleObject.update();
 
+        if(this.vehicleObject.vehicleOverrideConfig.bulletLaunchOffset != null && !this.bulletLaunchOffset.equals(Utility.ArrayToThreeVector3(this.vehicleObject.vehicleOverrideConfig.bulletLaunchOffset))) {
+            this.bulletLaunchOffset.copy(Utility.ArrayToThreeVector3(this.vehicleObject.vehicleOverrideConfig.bulletLaunchOffset));
+        }
+
         if(this.vehicleType == VehicleType.Killdozer) {
             let shovelModel = this.getShovel(this.vehicleObject.getModel());
             if(shovelModel != null) {
@@ -663,7 +669,7 @@ export class Player {
         const size = aabb.getSize(new THREE.Vector3());
 
         const vec = new THREE.Vector3();
-        this.vehicleObject.getModel().getWorldPosition(vec);
+        this.vehicleObject.getModel().getWorldPosition(vec).add(this.bulletLaunchOffset);
 
         // offset to front of gun
         var tempPosition = vec.add(

@@ -790,13 +790,21 @@ export default class SceneController {
             let player1VehicleOverrideConfig = this.gameScene!.player1.getVehicleObject().vehicleOverrideConfig;
             let modelOffset = player1VehicleOverrideConfig.modelOffset;
 
-            const axisNames = ['modelOffset.x', 'modelOffset.y', 'modelOffset.z'];
+            let axisNames = ['modelOffset.x', 'modelOffset.y', 'modelOffset.z'];
             modelOffset.forEach((_, i) => {
-                playerFolder.add(modelOffset, i.toString(), 0, 20, 0.1)
-                    .name(axisNames[i])
-                    .onChange(() => {
+                playerFolder.add(modelOffset, i.toString(), -10, 10, 0.1)
+                    .name(axisNames[i]).listen()
+                    //.onChange(() => {
                         //console.log(modelOffset);
-                });
+                //})
+                ;
+            });
+
+            let bulletLaunchOffset = player1VehicleOverrideConfig.bulletLaunchOffset!;
+            axisNames = ['bulletLaunchOffset.x', 'bulletLaunchOffset.y', 'bulletLaunchOffset.z'];
+            bulletLaunchOffset.forEach((_, i) => {
+                playerFolder.add(bulletLaunchOffset, i.toString(), -10, 10, 0.1)
+                    .name(axisNames[i]).listen();
             });
 
             // wheels

@@ -84,4 +84,6 @@ export interface VehicleConfig {
     driveSystem: DriveSystem;
 
     followCameraOffset?: number[];
+
+    bulletLaunchOffset?: number[];
 }

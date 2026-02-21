@@ -71,5 +71,7 @@
     "maxSuspensionForce": 100000,
     "maxSuspensionTravel": 3.0,
 
-    "followCameraOffset": [3, 3, 0]
+    "followCameraOffset": [3, 3, 0],
+
+    "bulletLaunchOffset": [0, 0, 0]
 }

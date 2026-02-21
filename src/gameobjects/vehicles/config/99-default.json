@@ -69,5 +69,7 @@
     "dampingRelaxation": 2.5,
     "dampingCompression": 2.0,
     "maxSuspensionForce": 10000,
-    "maxSuspensionTravel": 2
+    "maxSuspensionTravel": 2,
+
+    "bulletLaunchOffset": [0, 0, 0]
 }

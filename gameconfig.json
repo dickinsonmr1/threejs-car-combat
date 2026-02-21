@@ -15,7 +15,7 @@
     "contactEquationRelaxation": 3,
     "contactEquationStiffness": 1e8,
     
-    "overrideRenderResolution": true,
+    "overrideRenderResolution": false,
     "renderResolutionOverrideX": 720,
     "renderResolutionOverrideY": 480
 }

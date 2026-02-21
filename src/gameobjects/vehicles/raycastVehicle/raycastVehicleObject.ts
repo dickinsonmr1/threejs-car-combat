@@ -591,6 +591,10 @@ export class RaycastVehicleObject implements IPlayerVehicle {
 
         if(this.vehicleOverrideConfig.driveSystem != this.driveSystem)
             this.driveSystem = this.vehicleOverrideConfig.driveSystem;
+        
+        if(this.modelOffset && !Utility.ArrayToThreeVector3(this.vehicleOverrideConfig.modelOffset).equals(this.modelOffset)) {
+            this.modelOffset.copy(Utility.ArrayToThreeVector3(this.vehicleOverrideConfig.modelOffset));
+        }
 
         //this.wheels.forEach(x => x.update());
         

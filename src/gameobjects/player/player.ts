@@ -1293,7 +1293,7 @@ export class Player {
                 this.tryFireSonicPulse();
                 break;
             case SpecialType.MegaGun:
-                this.tryFireMegaGun;
+                this.tryFireMegaGun();
                 break;
             case SpecialType.Lightning:
                 this.tryFireLightning();

@@ -786,24 +786,37 @@ export default class SceneController {
             */
 
             const playerFolder = this.gui.addFolder('Player 1 Config').close();
-            // wheels
-            playerFolder.add(this.gameScene!.player1.getVehicleObject().vehicleOverrideConfig, 'frictionSlip', 0, 10, 0.1).listen();
-            playerFolder.add(this.gameScene!.player1.getVehicleObject().vehicleOverrideConfig, 'frictionSlipRear', 0, 10, 0.1).listen();
-            playerFolder.add(this.gameScene!.player1.getVehicleObject().vehicleOverrideConfig, 'driftingFrictionSlipFront', 0, 10, 0.1).listen();
-            playerFolder.add(this.gameScene!.player1.getVehicleObject().vehicleOverrideConfig, 'driftingFrictionSlipRear', 0, 10, 0.1).listen();
 
-            playerFolder.add(this.gameScene!.player1.getVehicleObject().vehicleOverrideConfig, 'rollInfluence', 0, 1, 0.01).listen();
-            playerFolder.add(this.gameScene!.player1.getVehicleObject().vehicleOverrideConfig, 'customSlidingRotationalSpeed', -90, 0, 5).listen();
+            let player1VehicleOverrideConfig = this.gameScene!.player1.getVehicleObject().vehicleOverrideConfig;
+            let modelOffset = player1VehicleOverrideConfig.modelOffset;
+
+            const axisNames = ['modelOffset.x', 'modelOffset.y', 'modelOffset.z'];
+            modelOffset.forEach((_, i) => {
+                playerFolder.add(modelOffset, i.toString(), 0, 20, 0.1)
+                    .name(axisNames[i])
+                    .onChange(() => {
+                        //console.log(modelOffset);
+                });
+            });
+
+            // wheels
+            playerFolder.add(player1VehicleOverrideConfig, 'frictionSlip', 0, 10, 0.1).listen();
+            playerFolder.add(player1VehicleOverrideConfig, 'frictionSlipRear', 0, 10, 0.1).listen();
+            playerFolder.add(player1VehicleOverrideConfig, 'driftingFrictionSlipFront', 0, 10, 0.1).listen();
+            playerFolder.add(player1VehicleOverrideConfig, 'driftingFrictionSlipRear', 0, 10, 0.1).listen();
+
+            playerFolder.add(player1VehicleOverrideConfig, 'rollInfluence', 0, 1, 0.01).listen();
+            playerFolder.add(player1VehicleOverrideConfig, 'customSlidingRotationalSpeed', -90, 0, 5).listen();
 
             // wheel turn amount
-            playerFolder.add(this.gameScene!.player1.getVehicleObject().vehicleOverrideConfig, 'maxSteerVal', 0, Math.PI, Math.PI / 16).listen();
-            playerFolder.add(this.gameScene!.player1.getVehicleObject().vehicleOverrideConfig, 'driftingMaxSteerVal', 0, Math.PI, Math.PI / 16).listen();
+            playerFolder.add(player1VehicleOverrideConfig, 'maxSteerVal', 0, Math.PI, Math.PI / 16).listen();
+            playerFolder.add(player1VehicleOverrideConfig, 'driftingMaxSteerVal', 0, Math.PI, Math.PI / 16).listen();
 
             // engine / drive system
-            playerFolder.add(this.gameScene!.player1.getVehicleObject().vehicleOverrideConfig, 'lowSpeedForce', 0, 10000, 100).listen();
-            playerFolder.add(this.gameScene!.player1.getVehicleObject().vehicleOverrideConfig, 'highSpeedForce', 0, 10000, 100).listen();
-            playerFolder.add(this.gameScene!.player1.getVehicleObject().vehicleOverrideConfig, 'topSpeedForHigherTorque', 0, 60, 5).listen();
-            playerFolder.add(this.gameScene!.player1.getVehicleObject().vehicleOverrideConfig, 'driveSystem', {AllWheelDrive: 0, FrontWheelDrive: 1, RearWheelDrive: 2}).listen();
+            playerFolder.add(player1VehicleOverrideConfig, 'lowSpeedForce', 0, 10000, 100).listen();
+            playerFolder.add(player1VehicleOverrideConfig, 'highSpeedForce', 0, 10000, 100).listen();
+            playerFolder.add(player1VehicleOverrideConfig, 'topSpeedForHigherTorque', 0, 60, 5).listen();
+            playerFolder.add(player1VehicleOverrideConfig, 'driveSystem', {AllWheelDrive: 0, FrontWheelDrive: 1, RearWheelDrive: 2}).listen();
         });
 
         // todo: fix behavior because of async

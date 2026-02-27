@@ -134,6 +134,9 @@ export class TerrainChunk {
       const texture4 = this.loadAndConfigureTexture(loader, worldConfig.texture4, repeats);
       const texture5 = this.loadAndConfigureTexture(loader, worldConfig.texture5, repeats);
 
+      const roadMaskTexture = this.loadAndConfigureTexture(loader, 'assets/terrain/road-mask-256x256.png', repeats);
+      const roadTexture = this.loadAndConfigureTexture(loader, 'assets/terrain/road-32x32.png', repeats);
+
       return new THREE.ShaderMaterial({
           uniforms: {
             lowTexture: { value: texture1},
@@ -141,6 +144,11 @@ export class TerrainChunk {
             midTexture: { value: texture3 },
             highMidTexture: { value: texture4 },
             highTexture: { value: texture5 },
+
+            roadMaskTexture: {value: roadMaskTexture},
+            roadTexture: {value: roadTexture },
+            roadRepeats: {value: repeats},
+
             repeats: { value: repeats },
             heightFactor: { value: heightFactor },
             fogColor: { value: this.fog?.color ?? new THREE.Color('black') },
@@ -265,8 +273,12 @@ export class TerrainChunk {
       uniform sampler2D midTexture;
       uniform sampler2D highMidTexture;
       uniform sampler2D highTexture;      
-      
       uniform float repeats;
+
+      uniform sampler2D roadMaskTexture;
+      uniform sampler2D roadTexture;      
+      uniform float roadRepeats;
+      
       uniform float heightFactor;
 
       uniform vec3 fogColor;
@@ -293,13 +305,30 @@ export class TerrainChunk {
         color = mix(color, highMidColor, smoothstep(0.5, 0.75, height));
         color = mix(color, highColor, smoothstep(0.75, 1.0, height));
 
-        //gl_FragColor = color;
+        //// Mix base color with fog color based on fog factor
+        //gl_FragColor = vec4(mix(color.rgb, fogColor, fogFactor), color.a);
+
+        vec2 roadUv = vUv * roadRepeats;
+
+        vec4 roadColor = texture2D(roadTexture, roadUv);
+        float mask = texture2D(roadMaskTexture, vUv).r;
+
+            //float roadBlend = texture2D(roadMaskTexture, vUv).r; 
+            //float roadBlend = smoothstep(0.4, 0.6, texture2D(roadMaskTexture, vUv).r);
+
+        float roadBlend = mask * roadColor.a;
+        roadBlend = clamp(roadBlend, 0.0, 1.0);
+
+        //vec4 finalColor = mix(color, roadColor, roadBlend);
+        vec3 finalColor = mix(color.rgb, roadColor.rgb, roadBlend);
 
         // Fog factor calculation (standard linear fog)
         float fogFactor = smoothstep(fogNear, fogFar, vFogDepth);
 
-        // Mix base color with fog color based on fog factor
-        gl_FragColor = vec4(mix(color.rgb, fogColor, fogFactor), color.a);
+        // Apply fog AFTER blending
+        vec3 fogged = mix(finalColor.rgb, fogColor, fogFactor);
+
+        gl_FragColor = vec4(fogged, 1.0);
       }
         `
     }

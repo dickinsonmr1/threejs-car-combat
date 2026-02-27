@@ -11,6 +11,9 @@
         "texture3": "assets/terrain/tileable_grass_00.png",
         "texture4": "assets/terrain/tileable_grass_01.png",
         "texture5": "assets/terrain/tileable_grass_01.png",
+
+        "roadMaskTexture": "assets/terrain/road-mask-256x256.png",
+        "roadTexture": "assets/terrain/road-32x32.png",
         
         "skyTexture": "assets/skybox/industrial_sunset_puresky.jpg",
 
@@ -36,6 +39,9 @@
         "texture3": "assets/terrain/snow.png",
         "texture4": "assets/terrain/snow.png",
         "texture5": "assets/terrain/snow.png",
+
+        "roadMaskTexture": "assets/terrain/road-mask-256x256.png",
+        "roadTexture": "assets/terrain/road-32x32.png",
 
         "skyTexture": "assets/skybox/overcast_soil_puresky.jpg",
         

@@ -12,6 +12,9 @@ export interface WorldConfig {
     texture3: string;
     texture4: string;
     texture5: string;  
+
+    roadMaskTexture?: string;
+    roadTexture?: string;
     
     skyTexture: string;
 

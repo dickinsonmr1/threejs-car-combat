@@ -86,6 +86,12 @@ export class Player {
     emergencyLights!: EmergencyLights;
     emergencyLights2!: EmergencyLights;
 
+    muzzleFlashGeometry: THREE.CylinderGeometry;
+    muzzleFlashMaterial: THREE.ShaderMaterial;
+    muzzleFlashMesh: THREE.Mesh;
+    muzzleFlashStartTime: number = -1;
+    muzzleFlashDuration: number = 0.08;
+
     private vehicleObject!: IPlayerVehicle;    
     turboParticleEmitter: ParticleTrailObject;
     
@@ -312,7 +318,84 @@ export class Player {
         const BoxGeometry = new THREE.BoxGeometry(1.5, 1, 1.5);
         this.shovelBoundingMesh = new THREE.Mesh(BoxGeometry, this.boundingMeshMaterial);
         scene.add(this.shovelBoundingMesh);
-       
+
+
+        this.muzzleFlashGeometry = new THREE.CylinderGeometry(
+            0.0,   // tip radius
+            0.5,  // base radius
+            4,//0.6,   // length
+            16,
+            1,
+            true   // open ended
+        );
+        this.muzzleFlashGeometry.rotateX(Math.PI / 2);
+
+        this.muzzleFlashMaterial = new THREE.ShaderMaterial({
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+            side: THREE.DoubleSide,
+            uniforms: {
+                uTime: { value: 0 },
+                uDuration: { value: 0.08 }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                varying float vLength;
+
+                void main() {
+                vUv = uv;
+                vLength = uv.y; // along cone
+
+                gl_Position = projectionMatrix *
+                                modelViewMatrix *
+                                vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform float uTime;
+                uniform float uDuration;
+
+                varying vec2 vUv;
+                varying float vLength;
+
+                void main() {
+
+                float life = uTime / uDuration;
+                if (life > 1.0) discard;
+
+                // radial center
+                vec2 centered = vUv - vec2(0.5, 0.0);
+
+                float radius = abs(centered.x);
+
+                // animated spikes
+                float angle = atan(centered.x, vLength);
+                float spikes = sin(angle * 12.0 + uTime * 40.0) * 0.2 + 0.8;
+
+                // core cone glow
+                float cone = smoothstep(0.4 * spikes, 0.0, radius);
+
+                // fade toward tip
+                float lengthFade = smoothstep(1.0, 0.0, vLength);
+
+                // overall fade over lifetime
+                float timeFade = 1.0 - life;
+
+                float intensity = cone * lengthFade * timeFade;
+
+                vec3 color = vec3(2.0, 1.2, 0.4) * intensity;
+
+                gl_FragColor = vec4(color, intensity);
+                }
+            `
+        });
+
+        this.muzzleFlashMesh = new THREE.Mesh(this.muzzleFlashGeometry, this.muzzleFlashMaterial);
+        //this.muzzleFlashMesh.position.copy(this.getPosition());
+        this.muzzleFlashMesh.visible = false;
+        scene.add(this.muzzleFlashMesh);
+            
         //this.bulletSound.position.copy(this.getPosition());
         //this.rocketSound.position.copy(this.getPosition());
         //scene.add(this.bulletSound);
@@ -340,6 +423,13 @@ export class Player {
         //if(!isCpuPlayer)
         //if(this.playerIndex === 0)
             //gameScene.getAudioManager().playLoopedSound('engine', this.playerIndex);      
+    }
+
+    private fireMuzzleFlash() {
+        let scene = <GameScene>this.scene;
+        
+        this.muzzleFlashStartTime = scene.getClock().getElapsedTime();
+        this.muzzleFlashMesh.visible = true;
     }
 
     private getScene(): GameScene {
@@ -577,6 +667,34 @@ export class Player {
                 Utility.CannonVec3ToThreeVec3(this.vehicleObject.getChassis().body.position),
                 Utility.CannonQuaternionToThreeQuaternion(this.vehicleObject.getChassis().body.quaternion)            
             );    
+
+        if(this.muzzleFlashMesh != null) {
+
+            const now = clock.getElapsedTime();
+            if (this.muzzleFlashMesh.visible && this.muzzleFlashStartTime >= 0) {
+
+                this.muzzleFlashMesh.position.copy(this.getPosition());
+                this.muzzleFlashMesh.quaternion.copy(this.vehicleObject.getModel().quaternion);
+
+                const elapsed = now - this.muzzleFlashStartTime;
+                const life = elapsed / this.muzzleFlashDuration;
+
+                if (life >= 1.0) {
+                    this.muzzleFlashMesh.visible = false;
+                    this.muzzleFlashStartTime = -1;
+                    return;
+                }
+                else {
+
+                    // Drive shader time
+                    this.muzzleFlashMaterial.uniforms.uTime.value = elapsed;
+
+                    // Optional: stretch forward over life
+                    const length = THREE.MathUtils.lerp(0.3, 1.2, life);
+                    this.muzzleFlashMesh.scale.set(1, 1, length);
+                }
+            }
+        }
         
         /*
         switch(launchLocation) {
@@ -1101,6 +1219,7 @@ export class Player {
 
     tryFireSecondaryWeapon(): void {
         this.tryFireBullets();
+        //this.fireMuzzleFlash();
     }
 
     tryFireRocket(): void {
@@ -1206,6 +1325,8 @@ export class Player {
                 let audioManager = gameScene.getAudioManager();
                 audioManager.playSound('bullet', true, this.playerIndex);
             //}
+
+            this.fireMuzzleFlash();
         }
     }
 

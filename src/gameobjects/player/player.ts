@@ -90,7 +90,7 @@ export class Player {
     muzzleFlashMaterial: THREE.ShaderMaterial;
     muzzleFlashMesh: THREE.Mesh;
     muzzleFlashStartTime: number = -1;
-    muzzleFlashDuration: number = 0.08;
+    muzzleFlashDuration: number = 0.8; // 0.08;
 
     private vehicleObject!: IPlayerVehicle;    
     turboParticleEmitter: ParticleTrailObject;
@@ -322,8 +322,8 @@ export class Player {
 
         this.muzzleFlashGeometry = new THREE.CylinderGeometry(
             0.0,   // tip radius
-            0.5,  // base radius
-            4,//0.6,   // length
+            0.25,  // base radius
+            10,//0.6,   // length
             16,
             1,
             true   // open ended
@@ -392,7 +392,10 @@ export class Player {
         });
 
         this.muzzleFlashMesh = new THREE.Mesh(this.muzzleFlashGeometry, this.muzzleFlashMaterial);
-        //this.muzzleFlashMesh.position.copy(this.getPosition());
+        this.muzzleFlashMesh.position.copy(this.getPosition());
+        //this.muzzleFlashMesh.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+        //this.muzzleFlashMesh.rotateOnAxis(new THREE.Vector3(0, 0, 1), Math.PI / 2);
+        //this.muzzleFlashMesh.rotateOnAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);        
         this.muzzleFlashMesh.visible = false;
         scene.add(this.muzzleFlashMesh);
             
@@ -670,11 +673,17 @@ export class Player {
 
         if(this.muzzleFlashMesh != null) {
 
+            this.muzzleFlashMesh.position.copy(this.getPosition().add(this.bulletLaunchOffset));          
+            let extraQuat = new THREE.Quaternion();
+            extraQuat = extraQuat.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI/2);      
+
+            this.muzzleFlashMesh.quaternion.copy(this.vehicleObject.getModel().quaternion).multiply(extraQuat);
+
             const now = clock.getElapsedTime();
             if (this.muzzleFlashMesh.visible && this.muzzleFlashStartTime >= 0) {
 
-                this.muzzleFlashMesh.position.copy(this.getPosition());
-                this.muzzleFlashMesh.quaternion.copy(this.vehicleObject.getModel().quaternion);
+                //this.muzzleFlashMesh.position.copy(this.getPosition());                
+                //this.muzzleFlashMesh.quaternion.copy(this.vehicleObject.getModel().quaternion);
 
                 const elapsed = now - this.muzzleFlashStartTime;
                 const life = elapsed / this.muzzleFlashDuration;

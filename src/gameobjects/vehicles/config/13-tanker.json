@@ -76,5 +76,5 @@
 
     "followCameraOffset": [3, 3, 0],
 
-    "bulletLaunchOffset": [0, 0, 0]
+    "bulletLaunchOffset": [0, 1.0, 0]
 }

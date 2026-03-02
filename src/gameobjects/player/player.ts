@@ -110,6 +110,8 @@ export class Player {
     playerMarker!: PlayerMarker;
 
     private fireLeft: boolean = false;
+    private bulletLaunchSideOffset: number = 2;
+    private rocketLaunchSideOffset: number = 5;
     private projectileFactory: ProjectileFactory;// = new ProjectileFactory();
 
     private bulletCooldownClock: WeaponCoolDownClock = new WeaponCoolDownClock(0.15, 0.05);
@@ -211,7 +213,7 @@ export class Player {
         this.currentHealth = maxHealth;
 
         this.projectileFactory = new ProjectileFactory(particleMaterial);
-        this.headLights = new Headlights(scene, leftHeadlightOffset, rightHeadlightOffset);
+        //this.headLights = new Headlights(scene, leftHeadlightOffset, rightHeadlightOffset);
         this.brakeLights = new Brakelights(scene, leftBrakeLightOffset, rightBrakeLightOffset);
         if(this.brakeLights != null)
             this.brakeLights.setVisible(false);
@@ -316,7 +318,8 @@ export class Player {
         this.shovelBoundingMesh = new THREE.Mesh(BoxGeometry, this.boundingMeshMaterial);
         scene.add(this.shovelBoundingMesh);
 
-        this.muzzleFlashes = new MuzzleFlashes(scene, new THREE.Vector3(-1, 0, -2), new THREE.Vector3(1, 0, -2));
+        // left/right, up/down, forward/backward
+        this.muzzleFlashes = new MuzzleFlashes(scene, new THREE.Vector3(-0.4, 0, -0.5), new THREE.Vector3(0.4, 0, -0.5), 0.1);
             
         //this.bulletSound.position.copy(this.getPosition());
         //this.rocketSound.position.copy(this.getPosition());
@@ -655,12 +658,12 @@ export class Player {
         let sideOffset = 0;
         switch(projectileType) {
             case ProjectileType.Bullet:
-                sideOffset = 2;
+                sideOffset = this.bulletLaunchSideOffset;
                 this.fireLeft = !this.fireLeft;
                 launchLocation = this.fireLeft ? ProjectileLaunchLocation.Left : ProjectileLaunchLocation.Right;
                 break;
             case ProjectileType.Rocket:
-                sideOffset = 5;
+                sideOffset = this.rocketLaunchSideOffset;
                 launchLocation = ProjectileLaunchLocation.Center;
                 break;
         }        
@@ -1223,7 +1226,7 @@ export class Player {
                 audioManager.playSound('bullet', true, this.playerIndex);
             //}
 
-            this.fireMuzzleFlash(this.fireLeft);
+            this.fireMuzzleFlash(!this.fireLeft);
         }
     }
 

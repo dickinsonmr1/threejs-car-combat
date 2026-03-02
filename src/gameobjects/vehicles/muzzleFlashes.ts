@@ -10,14 +10,14 @@ export default class MuzzleFlashes {
 
     muzzleFlashLeftStartTime: number = -1;
     muzzleFlashRightStartTime: number = -1;
-    muzzleFlashDuration: number = 0.8; // 0.08;
+    //muzzleFlashDuration: number = 3.0; // 0.08;
 
     shaderMaterialLeft: THREE.ShaderMaterial;
     shaderMaterialRight: THREE.ShaderMaterial;
     /**
      *
      */
-    constructor(scene: THREE.Scene, leftOffset: THREE.Vector3, rightOffset: THREE.Vector3) {        
+    constructor(scene: THREE.Scene, leftOffset: THREE.Vector3, rightOffset: THREE.Vector3, public muzzleFlashDuration: number = 0.08) {        
 
         this.shaderMaterialLeft = new THREE.ShaderMaterial({
             vertexShader: this.vertexShader(),
@@ -28,7 +28,7 @@ export default class MuzzleFlashes {
             side: THREE.DoubleSide,
             uniforms: {
                 uTime: { value: 0 },
-                uDuration: { value: 0.08 }
+                uDuration: { value: this.muzzleFlashDuration }
             }
         });
 
@@ -41,14 +41,14 @@ export default class MuzzleFlashes {
             side: THREE.DoubleSide,
             uniforms: {
                 uTime: { value: 0 },
-                uDuration: { value: 0.08 }
+                uDuration: { value: this.muzzleFlashDuration }
             }
         });
 
         let muzzleFlashGeometry = new THREE.CylinderGeometry(
             0.0,   // tip radius
             0.25,  // base radius
-            10,//0.6,   // length
+            2,//0.6,   // length
             16,
             1,
             true   // open ended

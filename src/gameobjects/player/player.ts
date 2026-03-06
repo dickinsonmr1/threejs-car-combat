@@ -213,7 +213,7 @@ export class Player {
         this.currentHealth = maxHealth;
 
         this.projectileFactory = new ProjectileFactory(particleMaterial);
-        //this.headLights = new Headlights(scene, leftHeadlightOffset, rightHeadlightOffset);
+        this.headLights = new Headlights(scene, leftHeadlightOffset, rightHeadlightOffset);
         this.brakeLights = new Brakelights(scene, leftBrakeLightOffset, rightBrakeLightOffset);
         if(this.brakeLights != null)
             this.brakeLights.setVisible(false);
@@ -1287,7 +1287,7 @@ export class Player {
     }
 
     tryFireShovel(): void {
-        if(this.vehicleType != VehicleType.Killdozer)
+        if(this.vehicleType != VehicleType.Killdozer || this.playerState !== PlayerState.Alive)
             return;
 
         this.shovelCooldownClock.start();
@@ -1295,10 +1295,13 @@ export class Player {
 
     
     tryFireLightning(): void {
-       this.lightningActive = true;
 
-       let gameScene = <GameScene>this.scene;
-       gameScene.getAudioManager().playLoopedSound('lightning', this.playerIndex);
+        if(this.playerState == PlayerState.Alive) {
+            this.lightningActive = true;
+
+            let gameScene = <GameScene>this.scene;
+            gameScene.getAudioManager().playLoopedSound('lightning', this.playerIndex);
+        }
     }
 
     tryStopFireLightning() {

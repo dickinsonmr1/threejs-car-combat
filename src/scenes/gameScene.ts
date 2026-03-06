@@ -49,6 +49,7 @@ import KeyboardState from './keyboardState';
 import { IPrecipitationSystem } from '../gameobjects/world/IPrecipitationSystem';
 import { PrecipitationSystemGpu } from '../gameobjects/world/precipitationSystemGpu';
 import { GpuRainMinimal } from '../gameobjects/world/gpuRainMinimal';
+import { Geometry } from 'three/examples/jsm/deprecated/Geometry.js';
 
 // npm install cannon-es-debugger
 // https://youtu.be/Ht1JzJ6kB7g?si=jhEQ6AHaEjUeaG-B&t=291
@@ -344,6 +345,37 @@ export default class GameScene extends THREE.Scene {
         this.add(treeModel);
         treeModel.add(this.audioManager.getSound('player1-deathFire')!);
 
+        let cylinderGeometry = new THREE.CylinderGeometry(0.1, 2, 5);
+        let cylinderMaterial = new THREE.MeshBasicMaterial();
+        //cylinderMaterial.color = new THREE.Color('green');
+
+        let instancedTreeCount = 1000;
+        let instancedCylinderMesh = new THREE.InstancedMesh(cylinderGeometry, cylinderMaterial, instancedTreeCount);
+
+        this.add(instancedCylinderMesh);
+
+        const matrix = new THREE.Matrix4();
+
+        for (let i = 0; i < instancedTreeCount; i++) {
+
+            let mapWidth =  this.terrainChunk.getMapDimensions().x;
+            let mapHeight = this.terrainChunk.getMapDimensions().z;
+
+            let randX = randFloat(-mapWidth, mapWidth);        
+            let randZ = randFloat(-mapHeight, mapHeight);
+
+            const position = this.getWorldPositionOnTerrainAndWater(randX, randZ);
+            matrix.setPosition(position);
+
+            //const scale = 2;// + Math.random() * 2;
+            //matrix.scale.set() new THREE.Vector3(scale, scale, scale));
+
+            instancedCylinderMesh.setMatrixAt(i, matrix);
+            instancedCylinderMesh.setColorAt(i, new THREE.Color(Math.random(), Math.random(), Math.random()));
+        }
+        instancedCylinderMesh.instanceMatrix.needsUpdate = true;
+
+
         var barrelModelData = await this.gameAssetModelLoader.generateBarrelModel();
         let barrelModel = barrelModelData.scene.clone();
         barrelModel.position.copy(this.getWorldPositionOnTerrainAndWater(2, 2));
@@ -385,49 +417,51 @@ export default class GameScene extends THREE.Scene {
 
         document.body.appendChild(this.stats.dom);
 
-        this.debugDivElementManager = new DebugDivElementManager(25, 25);
-        this.debugDivElementManager.addNamedElementPlaceholders([
-            "GameCameraLocation",
-            "DebugCameraLocation",
-            "PlayerLocation",            
-            "AudioListener",
-            "Player1Speed",
-            "Player1BulletSoundLocation",
-            "Player1RocketSoundLocation",
-            "Objective",
-            "ParticleCount",
-            "FlamethrowerParticleCount",
-            "PhysicsObjectCount",
-            "LightObjectCount",
+        if(this.gameConfig.isDebug) {
+            this.debugDivElementManager = new DebugDivElementManager(25, 25);
+            this.debugDivElementManager.addNamedElementPlaceholders([
+                "GameCameraLocation",
+                "DebugCameraLocation",
+                "PlayerLocation",            
+                "AudioListener",
+                "Player1Speed",
+                "Player1BulletSoundLocation",
+                "Player1RocketSoundLocation",
+                "Objective",
+                "ParticleCount",
+                "FlamethrowerParticleCount",
+                "PhysicsObjectCount",
+                "LightObjectCount",
 
-            "ParticleEmitterCount",
-            "AnimatedSpriteCount",
-            "GrassBillboardsCount",
-            "CpuParticleCount",
-            "GpuParticleCount",
-            "RendererTotalGeometry",
-            "RendererTotalTextures",
-            "RendererTotalPrograms",
-            "TraverseTotalTextures",
-            "cpuOverrideBehavior",
-            
-            "player2Status",
-            "player2Target",
+                "ParticleEmitterCount",
+                "AnimatedSpriteCount",
+                "GrassBillboardsCount",
+                "CpuParticleCount",
+                "GpuParticleCount",
+                "RendererTotalGeometry",
+                "RendererTotalTextures",
+                "RendererTotalPrograms",
+                "TraverseTotalTextures",
+                "cpuOverrideBehavior",
+                
+                "player2Status",
+                "player2Target",
 
-            "player3Status",
-            "player3Target",
+                "player3Status",
+                "player3Target",
 
-            "player4Status",
-            "player4Target",
-            "QuadtreeTerrain",
+                "player4Status",
+                "player4Target",
+                "QuadtreeTerrain",
 
-            "Player1_currentMaxWheelSlip",
-            "PositionalSounds"
-            //"Player1_Front_Right_WheelSlip",
-            //"Player1_Back_Left_WheelSlip",
-            //"Player1_Back_Right_WheelSlip"
-        ]);
-        this.debugDivElementManager.hideAllElements();
+                "Player1_currentMaxWheelSlip",
+                "PositionalSounds"
+                //"Player1_Front_Right_WheelSlip",
+                //"Player1_Back_Left_WheelSlip",
+                //"Player1_Back_Right_WheelSlip"
+            ]);
+            this.debugDivElementManager.hideAllElements();
+        }
        
         // https://threejs.org/examples/?q=water#webgl_shaders_ocean
 
@@ -1882,7 +1916,8 @@ export default class GameScene extends THREE.Scene {
 
         this.camera.updateMatrixWorld(true);
 
-        this.updateDebugDivElements();
+        if(this.gameConfig.isDebug)
+            this.updateDebugDivElements();
         //this.stats.update();
 
         this.audioManager.update(this.camera.position);

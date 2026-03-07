@@ -17,7 +17,7 @@ import { Player, PlayerState, VehicleType } from '../gameobjects/player/player';
 import { FlamethrowerEmitter } from '../gameobjects/weapons/flamethrowerEmitter';
 import { ExplosionCpuParticleEmitter } from '../gameobjects/fx/explosionCpuParticleEmitter';
 import { Utility } from '../utility';
-import { TextureHeightMapArray } from '../gameobjects/textureToArray';
+import { TextureToArray } from '../gameobjects/textureToArray';
 import { Water } from 'three/addons/objects/Water.js';
 import { DebugDivElementManager } from './debugDivElementManager';
 import { TerrainChunk } from '../gameobjects/terrain/terrainChunk';
@@ -32,7 +32,7 @@ import { PrecipitationSystem, PrecipitationType } from '../gameobjects/world/pre
 import { DumpsterFireObject } from '../gameobjects/weapons/dumpsterFireObject';
 import { VehicleUtil } from '../gameobjects/vehicles/vehicleUtil';
 import GameAssetModelLoader from '../gameobjects/shapes/gameAssetModelLoader';
-import { TextureHeightMapArray2 } from '../gameobjects/fx/textureToArray2';
+import { HeightMapArray } from '../gameobjects/heightMapArray';
 import { QuadtreeTerrainSystem5 } from '../gameobjects/terrain/quadtree5/QuadtreeTerrainSystem5';
 import LODTerrainSystem from '../gameobjects/terrain/lodTerrainSystem';
 import { AudioManager } from '../gameobjects/audio/audioManager';
@@ -254,16 +254,7 @@ export default class GameScene extends THREE.Scene {
         );
     }
 
-    async initialize(player1VehicleType: VehicleType): Promise<void> {       
-        if(this.gameConfig.useFog) {
-            let fogColor = new THREE.Color('#ffbf52');//this.worldConfig.fogColor);
-            this.fog = new THREE.Fog(fogColor, this.gameConfig.fogNear, this.gameConfig.fogFar);
-        }
-
-        await this.loadVehicleAssets();
-
-        
-
+    async loadCommonTexturesAndObjects() {
         this.explosionTexture = this.textureLoader.load('assets/particles/particle-16x16.png');
         //this.explosionTexture = this.textureLoader.load('assets/tank_explosion3.png');
         this.crosshairTexture = this.textureLoader.load('assets/hud/crosshair061.png');
@@ -271,26 +262,20 @@ export default class GameScene extends THREE.Scene {
         this.animatedSpriteExplosionTexture = this.textureLoader.load('assets/spritesheets/explosion 1.png');
         this.animatedSpriteSparkTexture = this.textureLoader.load('assets/spritesheets/spritesheet-spark.png');
 
-        // https://www.youtube.com/watch?v=V_yjydXVIwQ&list=PLFky-gauhF46LALXSriZcXLJjwtZLjehn&index=4
-
-        this.world.broadphase = new CANNON.SAPBroadphase(this.world);
-        //this.world.broadphase = new CANNON.NaiveBroadphase;        
-        //(this.world.solver as CANNON.GSSolver).iterations = 20;
-
-        this.generateMap();
-    
+        
         var objectMaterial = new CANNON.Material();
     
         this.cube = new BoxObject(this, 1,1,1, new THREE.Vector3(0, 20, -9.5), 0xffff00,
                         //new THREE.MeshPhongMaterial( { color: 0xFFFF00, depthWrite: true }),
                         this.basicMaterial,
                         this.world, objectMaterial);
-
+        
         this.cube2 = new BoxObject(this, 1,1,1, new THREE.Vector3(0, 10, -8), 0xffff00,
                         //new THREE.MeshPhongMaterial( { color: 0xFFFF00, depthWrite: true }),
                         this.basicMaterial,
                         this.world, objectMaterial);
 
+        /*
         this.sphere = new SphereObject(this, 1, new THREE.Vector3(0.5, 5, -10), 0x00ff00,
                         //new THREE.MeshPhongMaterial( { color: 0x00ff00, depthWrite: true }), 
                         this.basicMaterial,
@@ -306,6 +291,7 @@ export default class GameScene extends THREE.Scene {
             this.worldMarkerShaderMaterial);
         cylinderMesh.position.set(20, cylinderMesh.position.y, 20);            
         this.add(cylinderMesh);
+        */
        
         /*
         const sphere = new THREE.Mesh(sphereGeometry, this.sphereMaterial);
@@ -313,31 +299,11 @@ export default class GameScene extends THREE.Scene {
         this.add(sphere);
         */
 
-        this.bouncyWheelMaterial = new CANNON.Material();
-        const wheelGroundContactMaterial = new CANNON.ContactMaterial(this.bouncyWheelMaterial, this.groundMaterial, {
-            friction: this.gameConfig.wheelGroundContactMaterialFriction, //1.2,
-            restitution: this.gameConfig.wheelGroundContactMaterialRestitution, //0.3 // High restitution for bounciness
-            contactEquationRelaxation: this.gameConfig.contactEquationRelaxation, // 3
-            contactEquationStiffness: this.gameConfig.contactEquationStiffness, // 1e8
-        });
-        this.world.addContactMaterial(wheelGroundContactMaterial);
-       
-        let particleMaterial = new THREE.SpriteMaterial({
-            map: this.explosionTexture,
-            depthTest: true
-        });
-
-        await this.generatePlayers(particleMaterial, player1VehicleType);
-
-        await this.loadSoundEffects(4);
-        
-        //let sonicPulseEmitter = new SonicPulseEmitter(this, this.player1.getPosition());           
-        //this.sonicPulseEmitters.push(sonicPulseEmitter);
-
         let crosshairMaterial = new THREE.SpriteMaterial( { map: this.crosshairTexture, color: 0xffffff, depthTest: false, depthWrite: false });//,transparent: true, opacity: 0.5 } );
         this.crosshairSprite = new THREE.Sprite( crosshairMaterial );
         this.add(this.crosshairSprite);
 
+        /*
         var treeModelData = await this.gameAssetModelLoader.generateTreeModel();
         let treeModel = treeModelData.scene.clone();
         treeModel.position.copy(this.getWorldPositionOnTerrainAndWater(0, 0));
@@ -345,75 +311,70 @@ export default class GameScene extends THREE.Scene {
         this.add(treeModel);
         treeModel.add(this.audioManager.getSound('player1-deathFire')!);
 
-        let cylinderGeometry = new THREE.CylinderGeometry(0.1, 2, 5);
-        let cylinderMaterial = new THREE.MeshBasicMaterial();
-        //cylinderMaterial.color = new THREE.Color('green');
-
-        let instancedTreeCount = 1000;
-        let instancedCylinderMesh = new THREE.InstancedMesh(cylinderGeometry, cylinderMaterial, instancedTreeCount);
-
-        this.add(instancedCylinderMesh);
-
-        const matrix = new THREE.Matrix4();
-
-        for (let i = 0; i < instancedTreeCount; i++) {
-
-            let mapWidth =  this.terrainChunk.getMapDimensions().x;
-            let mapHeight = this.terrainChunk.getMapDimensions().z;
-
-            let randX = randFloat(-mapWidth, mapWidth);        
-            let randZ = randFloat(-mapHeight, mapHeight);
-
-            const position = this.getWorldPositionOnTerrainAndWater(randX, randZ);
-            matrix.setPosition(position);
-
-            //const scale = 2;// + Math.random() * 2;
-            //matrix.scale.set() new THREE.Vector3(scale, scale, scale));
-
-            instancedCylinderMesh.setMatrixAt(i, matrix);
-            instancedCylinderMesh.setColorAt(i, new THREE.Color(Math.random(), Math.random(), Math.random()));
-        }
-        instancedCylinderMesh.instanceMatrix.needsUpdate = true;
-
-
         var barrelModelData = await this.gameAssetModelLoader.generateBarrelModel();
         let barrelModel = barrelModelData.scene.clone();
         barrelModel.position.copy(this.getWorldPositionOnTerrainAndWater(2, 2));
         barrelModel.position.y += 0.5;
-        barrelModel.scale.set(2, 2, 2);
+        barrelModel.scale.set(2, 2, 2);        
         this.add(barrelModel);
+        */
 
         this.dumpsterModel = await this.gameAssetModelLoader.generateDumpsterModel();
+    }
+
+    configurePhysics() {
+        
+        this.world.broadphase = new CANNON.SAPBroadphase(this.world);
+        //this.world.broadphase = new CANNON.NaiveBroadphase;        
+        //(this.world.solver as CANNON.GSSolver).iterations = 20;
+
+        this.groundMaterial = new CANNON.Material("groundMaterial");
+        this.bouncyWheelMaterial = new CANNON.Material();
+        
+        const wheelGroundContactMaterial = new CANNON.ContactMaterial(this.bouncyWheelMaterial, this.groundMaterial, {
+            friction: this.gameConfig.wheelGroundContactMaterialFriction, //1.2,
+            restitution: this.gameConfig.wheelGroundContactMaterialRestitution, //0.3 // High restitution for bounciness
+            contactEquationRelaxation: this.gameConfig.contactEquationRelaxation, // 3
+            contactEquationStiffness: this.gameConfig.contactEquationStiffness, // 1e8
+        });
+        this.world.addContactMaterial(wheelGroundContactMaterial);
+    }
+
+    async initialize(player1VehicleType: VehicleType): Promise<void> {       
+
+        if(this.gameConfig.useFog) {
+            let fogColor = new THREE.Color('#ffbf52');//this.worldConfig.fogColor);
+            this.fog = new THREE.Fog(fogColor, this.gameConfig.fogNear, this.gameConfig.fogFar);
+        }
+
+        this.configurePhysics();              
+
+        await this.loadVehicleAssets();
+
+        await this.loadCommonTexturesAndObjects();
+
+        // https://www.youtube.com/watch?v=V_yjydXVIwQ&list=PLFky-gauhF46LALXSriZcXLJjwtZLjehn&index=4
+
+        
+        this.generateMap();
+
+        await this.generatePlayers(player1VehicleType);
+        await this.loadSoundEffects(4);
+        
+        //let sonicPulseEmitter = new SonicPulseEmitter(this, this.player1.getPosition());           
+        //this.sonicPulseEmitters.push(sonicPulseEmitter);
+
+
         
         var groundCubeContactMaterial = new CANNON.ContactMaterial(
             this.terrainChunk.getPhysicsMaterial(),
-            this.cube.getPhysicsMaterial(),
+            this.cube!.getPhysicsMaterial(),
             {
                 friction: 0
             }            
         );
         this.world.addContactMaterial(groundCubeContactMaterial);
 
-        //const color = new THREE.Color('white');
-        const intensity = 0.5;
-        const distance = 50;
-        const angle = Math.PI / 8;
-        const penumbra = 0.25;
-        const decay = 0.1;
-
-        this.spotlight = new SpotlightObject(this, new THREE.Color('white'), intensity, distance, angle, penumbra, decay,
-            new THREE.Vector3(0,15,0),
-            this.cube2.mesh);
-
-        //const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.1);
-        //this.add(ambientLight);
-
-        const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
-        this.add( light );
-
-        for(let i = 0; i < 50; i++) {
-            this.generateRandomPickup(this.terrainChunk.getMapDimensions().x, this.terrainChunk.getMapDimensions().z);
-        }
 
         document.body.appendChild(this.stats.dom);
 
@@ -465,35 +426,6 @@ export default class GameScene extends THREE.Scene {
        
         // https://threejs.org/examples/?q=water#webgl_shaders_ocean
 
-        if(this.worldConfig.waterY != null) {
-            const waterGeometry = new THREE.PlaneGeometry( 10000, 10000 );
-            this.water = new Water(
-                waterGeometry,
-                {
-                    textureWidth: 512,
-                    textureHeight: 512,
-                    waterNormals: new THREE.TextureLoader().load( 'assets/waternormals.jpg', function ( texture ) {
-
-                        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-
-                    } ),
-                    sunDirection: new THREE.Vector3(),
-                    sunColor: 0xffffff,
-                    waterColor: 0x001e0f,
-                    distortionScale: 3.7,
-                    fog: this.fog !== undefined
-                }
-            );
-            this.water.rotation.x = - Math.PI / 2;
-            this.water.position.y += this.worldConfig.waterY; // 1.5
-            this.add( this.water );
-        }
-
-        if(this.worldConfig.precipitationType != PrecipitationType.None) {
-            this.precipitationSystem = new PrecipitationSystem(this, this.terrainChunk.heightMapLength, this.worldConfig.precipitationType, this.worldConfig.horizontalScale);
-            //this.precipitationSystem = new PrecipitationSystemGpu(this.sceneController.renderer, 256);
-            //this.precipitationSystem = new GpuRainMinimal(this, 15000, 50, 50);
-        }
             
         //this.rainShaderParticleEmitter = new RainShaderParticleEmitter(this);
 
@@ -1192,7 +1124,12 @@ export default class GameScene extends THREE.Scene {
         this.audioManager.addSoundObjectFromPositionalAudio(`fw_06`, await this.audioManager.createPositionalAudioFromJsonConfig({soundKey: 'fw_06', asset: 'assets/audio/fw_06.ogg', volume: 0.25, refDistance: 25, maxDistance: 100 }), new THREE.Vector3(Math.random()*100-50, 5, Math.random()*100-50));
     }
 
-    async generatePlayers(particleMaterial: THREE.SpriteMaterial, player1VehicleType: VehicleType): Promise<void> {
+    async generatePlayers(player1VehicleType: VehicleType): Promise<void> {
+
+        let particleMaterial = new THREE.SpriteMaterial({
+            map: this.explosionTexture,
+            depthTest: true
+        });
 
         await this.loadVehicleAssets();
 
@@ -1243,16 +1180,16 @@ export default class GameScene extends THREE.Scene {
         this.followCam.position.copy(followCameraOffset); // camera target offset related to car
     }
 
-    private generateMap(): void {
-        this.groundMaterial = new CANNON.Material("groundMaterial");
+    private generateMap(): void {        
         const normalMap = new THREE.TextureLoader().load('assets/normal-map.png');
         
-        var terrainChunk = new TextureHeightMapArray2();
-        terrainChunk.generate(this.worldConfig.heightMap).then((heightmap) => {
-        //terrainChunk.generate('assets/heightmaps/mountain_circle_512x512.png').then((heightmap) => {
-        //terrainChunk.generate('assets/heightmaps/kilimanjaro_2048x2048.png').then((heightmap) => {
-            // Heightmap is fully loaded and ready to use
-            console.log('Heightmap loaded successfully:', heightmap);
+        var heightMapArray = new HeightMapArray();
+        
+        //'assets/heightmaps/mountain_circle_512x512.png'
+        //'assets/heightmaps/kilimanjaro_2048x2048.png'
+        heightMapArray.generate(this.worldConfig.heightMap).then((heightmap) => {
+        
+            console.log('Heightmap loaded successfully and ready to use:', heightmap);
             
             // You can now safely use the heightmap for further processing
             // For example: generate terrain, visualize it, etc.
@@ -1278,9 +1215,62 @@ export default class GameScene extends THREE.Scene {
                     this.worldConfig.grassBillboardEndY,
                     100000
                 );
-                this.add( billboards );
+                this.add(billboards);
                 this.grassBillboards = billboards;
-            }                
+            }      
+            
+            this.generateInstancedMeshTrees();
+            
+            for(let i = 0; i < 50; i++) {
+                this.generateRandomPickup(this.terrainChunk.getMapDimensions().x, this.terrainChunk.getMapDimensions().z);
+            }
+            
+            if(this.worldConfig.waterY != null) {
+                const waterGeometry = new THREE.PlaneGeometry( 10000, 10000 );
+                this.water = new Water(
+                    waterGeometry,
+                    {
+                        textureWidth: 512,
+                        textureHeight: 512,
+                        waterNormals: new THREE.TextureLoader().load( 'assets/waternormals.jpg', function ( texture ) {
+
+                            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+
+                        } ),
+                        sunDirection: new THREE.Vector3(),
+                        sunColor: 0xffffff,
+                        waterColor: 0x001e0f,
+                        distortionScale: 3.7,
+                        fog: this.fog !== undefined
+                    }
+                );
+                this.water.rotation.x = - Math.PI / 2;
+                this.water.position.y += this.worldConfig.waterY; // 1.5
+                this.add( this.water );
+            }
+
+            if(this.worldConfig.precipitationType != PrecipitationType.None) {
+                this.precipitationSystem = new PrecipitationSystem(this, this.terrainChunk.heightMapLength, this.worldConfig.precipitationType, this.worldConfig.horizontalScale);
+                //this.precipitationSystem = new PrecipitationSystemGpu(this.sceneController.renderer, 256);
+                //this.precipitationSystem = new GpuRainMinimal(this, 15000, 50, 50);
+            }
+
+            //const color = new THREE.Color('white');
+            const intensity = 0.5;
+            const distance = 50;
+            const angle = Math.PI / 8;
+            const penumbra = 0.25;
+            const decay = 0.1;
+
+            this.spotlight = new SpotlightObject(this, new THREE.Color('white'), intensity, distance, angle, penumbra, decay,
+                new THREE.Vector3(0,15,0),
+                this.cube2!.mesh);
+
+            //const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.1);
+            //this.add(ambientLight);
+
+            const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
+            this.add(light);
         })
         .catch((error) => {
             console.error('Error loading heightmap:', error);
@@ -2068,5 +2058,38 @@ export default class GameScene extends THREE.Scene {
             
         //let textureCount = this.getAllLoadedTextures(this);
         //this.debugDivElementManager.updateElementText("TraverseTotalTextures", `Total Textures: ${textureCount}`);
+    }
+    
+    generateInstancedMeshTrees() {
+        
+        let cylinderGeometry = new THREE.CylinderGeometry(0.1, 2, 5);
+        let cylinderMaterial = new THREE.MeshBasicMaterial();
+        //cylinderMaterial.color = new THREE.Color('green');
+
+        let instancedTreeCount = 1000;
+        let instancedCylinderMesh = new THREE.InstancedMesh(cylinderGeometry, cylinderMaterial, instancedTreeCount);
+
+        this.add(instancedCylinderMesh);
+
+        const matrix = new THREE.Matrix4();
+
+        for (let i = 0; i < instancedTreeCount; i++) {
+
+            let mapWidth =  this.terrainChunk.getMapDimensions().x;
+            let mapHeight = this.terrainChunk.getMapDimensions().z;
+
+            let randX = randFloat(-mapWidth, mapWidth);        
+            let randZ = randFloat(-mapHeight, mapHeight);
+
+            const position = this.getWorldPositionOnTerrainAndWater(randX, randZ);
+            matrix.setPosition(position);
+
+            //const scale = 2;// + Math.random() * 2;
+            //matrix.scale.set() new THREE.Vector3(scale, scale, scale));
+
+            instancedCylinderMesh.setMatrixAt(i, matrix);
+            instancedCylinderMesh.setColorAt(i, new THREE.Color(Math.random(), Math.random(), Math.random()));
+        }
+        instancedCylinderMesh.instanceMatrix.needsUpdate = true;
     }
 }

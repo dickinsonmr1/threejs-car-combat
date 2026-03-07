@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-export class TextureHeightMapArray {
+export class TextureToArray {
     
     public numbers2DArray: number[][] = [];
     

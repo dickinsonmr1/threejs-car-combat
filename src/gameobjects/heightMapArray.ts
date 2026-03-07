@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { texture } from "three/examples/jsm/nodes/Nodes.js";
 
-export class TextureHeightMapArray2 {
+export class HeightMapArray {
     
     public numbers2DArray: number[][] = [];
     

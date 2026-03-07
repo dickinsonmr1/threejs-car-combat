@@ -174,7 +174,12 @@ export default class GameScene extends THREE.Scene {
 
     sonicPulseEmitters: SonicPulseEmitter[] = [];
 
-    lightningWeapons: Lightning[] = [];
+    lightningWeapons: Lightning[] = [
+        new Lightning(this, LightningType.Line, 5),
+        new Lightning(this, LightningType.Line, 5),
+        new Lightning(this, LightningType.CircleVertical, 1.5),
+        new Lightning(this, LightningType.CircleHorizontal, 1.5)
+    ];
     
     terrainChunk!: TerrainChunk;
     LODTerrainSystem!: LODTerrainSystem;
@@ -320,6 +325,32 @@ export default class GameScene extends THREE.Scene {
         */
 
         this.dumpsterModel = await this.gameAssetModelLoader.generateDumpsterModel();
+       
+        var groundCubeContactMaterial = new CANNON.ContactMaterial(
+            this.terrainChunk.getPhysicsMaterial(),
+            this.cube!.getPhysicsMaterial(),
+            {
+                friction: 0
+            }            
+        );
+        this.world.addContactMaterial(groundCubeContactMaterial);
+               
+        //this.addToParticleEmitters(new SmokeObject(this, this.explosionTexture, new THREE.Vector3(0, 0, 0), 5, 200000));
+
+        //this.animatedSprites.push(new AnimatedSprite(this, 'assets/spritesheets/spritesheet-spark.png', 2, 3, 10, true, new THREE.Vector3(0, 5, 0)));
+
+        // https://opengameart.org/content/9-frame-fire-animation-16x-32x-64x        
+        //this.animatedSprites.push(new AnimatedSprite(this, 'assets/spritesheets/Fire 64x.png', 3, 3, 5, true, new THREE.Vector3(5, 5, 5)));
+       
+        // https://opengameart.org/content/2d-explosion-animations-frame-by-frame
+        //this.animatedSprites.push(new AnimatedSprite(this, 'assets/spritesheets/explosion 1.png', 8, 8, 120, true, new THREE.Vector3(-5, 5, 5)));                
+        //this.animatedSprites.push(new AnimatedSprite(this, 'assets/spritesheets/explosion 2.png', 8, 8, 120, true, new THREE.Vector3(-4, 5, 5)));                
+        //this.animatedSprites.push(new AnimatedSprite(this, 'assets/spritesheets/explosion 3.png', 8, 8, 120, true, new THREE.Vector3(-3, 5, 5)));                
+        //this.animatedSprites.push(new AnimatedSprite(this, 'assets/spritesheets/explosion 4.png', 8, 8, 120, true, new THREE.Vector3(-2, 5, 5)));                
+ 
+                
+        //let sonicPulseEmitter = new SonicPulseEmitter(this, this.player1.getPosition());           
+        //this.sonicPulseEmitters.push(sonicPulseEmitter);
     }
 
     configurePhysics() {
@@ -342,128 +373,22 @@ export default class GameScene extends THREE.Scene {
 
     async initialize(player1VehicleType: VehicleType): Promise<void> {       
 
-        if(this.gameConfig.useFog) {
-            let fogColor = new THREE.Color('#ffbf52');//this.worldConfig.fogColor);
-            this.fog = new THREE.Fog(fogColor, this.gameConfig.fogNear, this.gameConfig.fogFar);
-        }
+        // https://www.youtube.com/watch?v=V_yjydXVIwQ&list=PLFky-gauhF46LALXSriZcXLJjwtZLjehn&index=4
 
-        this.configurePhysics();              
-
-        await this.loadVehicleAssets();
+        this.configurePhysics();                      
+        this.generateMap();
 
         await this.loadCommonTexturesAndObjects();
 
-        // https://www.youtube.com/watch?v=V_yjydXVIwQ&list=PLFky-gauhF46LALXSriZcXLJjwtZLjehn&index=4
-
-        
-        this.generateMap();
-
+        await this.loadVehicleAssets();
         await this.generatePlayers(player1VehicleType);
-        await this.loadSoundEffects(4);
-        
-        //let sonicPulseEmitter = new SonicPulseEmitter(this, this.player1.getPosition());           
-        //this.sonicPulseEmitters.push(sonicPulseEmitter);
 
-
-        
-        var groundCubeContactMaterial = new CANNON.ContactMaterial(
-            this.terrainChunk.getPhysicsMaterial(),
-            this.cube!.getPhysicsMaterial(),
-            {
-                friction: 0
-            }            
-        );
-        this.world.addContactMaterial(groundCubeContactMaterial);
-
+        await this.loadSoundEffects(this.allPlayers.length);
 
         document.body.appendChild(this.stats.dom);
 
-        if(this.gameConfig.isDebug) {
-            this.debugDivElementManager = new DebugDivElementManager(25, 25);
-            this.debugDivElementManager.addNamedElementPlaceholders([
-                "GameCameraLocation",
-                "DebugCameraLocation",
-                "PlayerLocation",            
-                "AudioListener",
-                "Player1Speed",
-                "Player1BulletSoundLocation",
-                "Player1RocketSoundLocation",
-                "Objective",
-                "ParticleCount",
-                "FlamethrowerParticleCount",
-                "PhysicsObjectCount",
-                "LightObjectCount",
-
-                "ParticleEmitterCount",
-                "AnimatedSpriteCount",
-                "GrassBillboardsCount",
-                "CpuParticleCount",
-                "GpuParticleCount",
-                "RendererTotalGeometry",
-                "RendererTotalTextures",
-                "RendererTotalPrograms",
-                "TraverseTotalTextures",
-                "cpuOverrideBehavior",
-                
-                "player2Status",
-                "player2Target",
-
-                "player3Status",
-                "player3Target",
-
-                "player4Status",
-                "player4Target",
-                "QuadtreeTerrain",
-
-                "Player1_currentMaxWheelSlip",
-                "PositionalSounds"
-                //"Player1_Front_Right_WheelSlip",
-                //"Player1_Back_Left_WheelSlip",
-                //"Player1_Back_Right_WheelSlip"
-            ]);
-            this.debugDivElementManager.hideAllElements();
-        }
-       
-        // https://threejs.org/examples/?q=water#webgl_shaders_ocean
-
-            
-        //this.rainShaderParticleEmitter = new RainShaderParticleEmitter(this);
-
-        // TODO: sun from https://threejs.org/examples/?q=water#webgl_shaders_ocean
-        /*
-        const parameters = {
-            elevation: 2,
-            azimuth: 180
-        };
-        const phi = THREE.MathUtils.degToRad( 90 - parameters.elevation );
-        const theta = THREE.MathUtils.degToRad( parameters.azimuth );
-
-        var sun = new THREE.Vector3();
-        sun.setFromSphericalCoords( 1, phi, theta );
-        //sky.material.uniforms[ 'sunPosition' ].value.copy( sun );
-        this.water.material.uniforms[ 'sunDirection' ].value.copy( sun ).normalize();        
-        */
-
-        //this.addToParticleEmitters(new SmokeObject(this, this.explosionTexture, new THREE.Vector3(0, 0, 0), 5, 200000));
-    
-        this.lightningWeapons.push(new Lightning(this, LightningType.Line, 5));
-        this.lightningWeapons.push(new Lightning(this, LightningType.Line, 5));
-        this.lightningWeapons.push(new Lightning(this, LightningType.CircleVertical, 1.5));
-        this.lightningWeapons.push(new Lightning(this, LightningType.CircleHorizontal, 1.5));
-
-        //this.animatedSprites.push(new AnimatedSprite(this, 'assets/spritesheets/spritesheet-spark.png', 2, 3, 10, true, new THREE.Vector3(0, 5, 0)));
-
-        // https://opengameart.org/content/9-frame-fire-animation-16x-32x-64x        
-        //this.animatedSprites.push(new AnimatedSprite(this, 'assets/spritesheets/Fire 64x.png', 3, 3, 5, true, new THREE.Vector3(5, 5, 5)));
-       
-        // https://opengameart.org/content/2d-explosion-animations-frame-by-frame
-        //this.animatedSprites.push(new AnimatedSprite(this, 'assets/spritesheets/explosion 1.png', 8, 8, 120, true, new THREE.Vector3(-5, 5, 5)));                
-        //this.animatedSprites.push(new AnimatedSprite(this, 'assets/spritesheets/explosion 2.png', 8, 8, 120, true, new THREE.Vector3(-4, 5, 5)));                
-        //this.animatedSprites.push(new AnimatedSprite(this, 'assets/spritesheets/explosion 3.png', 8, 8, 120, true, new THREE.Vector3(-3, 5, 5)));                
-        //this.animatedSprites.push(new AnimatedSprite(this, 'assets/spritesheets/explosion 4.png', 8, 8, 120, true, new THREE.Vector3(-2, 5, 5)));                
- 
-        //document.addEventListener('keydown', this.handleKeyDown);
-        //document.addEventListener('keyup', this.handleKeyUp);
+        if(this.gameConfig.isDebug) 
+            this.createDebugDivElements();
 
         document.getElementById('notificationDiv')!.innerHTML = `<i class="fa-solid fa-location-dot"></i> Objective: Destroy all enemies!`;
         document.getElementById('notificationDiv')!.style.opacity = '80%';            
@@ -471,16 +396,6 @@ export default class GameScene extends THREE.Scene {
             document.getElementById('notificationDiv')!.style.opacity = '0%';
         }, 2000);
     }   
-
-    //private handleKeyDown = (event: KeyboardEvent) => {        
-        /*
-        if (['w', 'a', 's', 'd'].includes(event.key)) {
-            event.preventDefault();
-            return;
-        }            
-        */
-        //this.keyDown.add(event.key.toLowerCase());
-    //}
 
     public processInput(keyboardState: KeyboardState) {
 
@@ -984,7 +899,7 @@ export default class GameScene extends THREE.Scene {
         this.pickups.push(item);
     }
 
-    async generateRandomExplosion(
+    private async generateRandomExplosion(
         projectileType: ProjectileType,
         position: THREE.Vector3,
         lightColor: THREE.Color,
@@ -1062,7 +977,7 @@ export default class GameScene extends THREE.Scene {
         }
     }
 
-    async generateSmoke(position: THREE.Vector3) {
+    private async generateSmoke(position: THREE.Vector3) {
         this.addToParticleEmitters(new SmokeObject(this, this.explosionTexture, position, 2, 500));
     }
 
@@ -1190,7 +1105,12 @@ export default class GameScene extends THREE.Scene {
         heightMapArray.generate(this.worldConfig.heightMap).then((heightmap) => {
         
             console.log('Heightmap loaded successfully and ready to use:', heightmap);
-            
+                        
+            if(this.gameConfig.useFog) {
+                let fogColor = new THREE.Color('#ffbf52');//this.worldConfig.fogColor);
+                this.fog = new THREE.Fog(fogColor, this.gameConfig.fogNear, this.gameConfig.fogFar);
+            }
+
             // You can now safely use the heightmap for further processing
             // For example: generate terrain, visualize it, etc.
                     
@@ -1271,6 +1191,28 @@ export default class GameScene extends THREE.Scene {
 
             const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
             this.add(light);
+
+            
+            // https://threejs.org/examples/?q=water#webgl_shaders_ocean
+
+                
+            //this.rainShaderParticleEmitter = new RainShaderParticleEmitter(this);
+
+            // TODO: sun from https://threejs.org/examples/?q=water#webgl_shaders_ocean
+            /*
+            const parameters = {
+                elevation: 2,
+                azimuth: 180
+            };
+            const phi = THREE.MathUtils.degToRad( 90 - parameters.elevation );
+            const theta = THREE.MathUtils.degToRad( parameters.azimuth );
+
+            var sun = new THREE.Vector3();
+            sun.setFromSphericalCoords( 1, phi, theta );
+            //sky.material.uniforms[ 'sunPosition' ].value.copy( sun );
+            this.water.material.uniforms[ 'sunDirection' ].value.copy( sun ).normalize();        
+            */
+
         })
         .catch((error) => {
             console.error('Error loading heightmap:', error);
@@ -1540,7 +1482,7 @@ export default class GameScene extends THREE.Scene {
         });
     }
 
-    checkLightningForCollision() {
+    private checkLightningForCollision() {
          this.allPlayers.forEach(player => {
             
             var anyHits = false;
@@ -1635,14 +1577,14 @@ export default class GameScene extends THREE.Scene {
         return position;
     }
 
-    updateWater() {
+    private updateWater() {
         if(!this.water)
             return;
 
         this.water.material.uniforms[ 'time' ].value += 0.5 / 60.0;
     }
 
-    updatePrecipitation() {
+    private updatePrecipitation() {
         if(this.precipitationSystem != null) {
 
             const time = this.clock.getDelta();
@@ -1650,11 +1592,11 @@ export default class GameScene extends THREE.Scene {
         }
     }
 
-    preUpdate() {
+    private preUpdate() {
         this.allPlayers.forEach(player => player.preUpdate());
     }
 
-    update() {
+    private update() {
         if(this.world != null) {
             //// called in main.ts
             //this.world.fixedStep();
@@ -1907,13 +1849,13 @@ export default class GameScene extends THREE.Scene {
         this.camera.updateMatrixWorld(true);
 
         if(this.gameConfig.isDebug)
-            this.updateDebugDivElements();
+            this.createDebugDivElements();
         //this.stats.update();
 
         this.audioManager.update(this.camera.position);
     }
    
-    updateLODTerrain() {
+    private updateLODTerrain() {
         if(!this.LODTerrainSystem)
             return;
 
@@ -1923,7 +1865,8 @@ export default class GameScene extends THREE.Scene {
         this.LODTerrainSystem.update(this.camera);
         
     }
-    updateQuadtreeTerrain5() {
+
+    private updateQuadtreeTerrain5() {
         if(!this.quadtreeTerrainSystem5)
             return;
 
@@ -1935,7 +1878,53 @@ export default class GameScene extends THREE.Scene {
         }
     }
 
-    updateDebugDivElements() {
+    private createDebugDivElements() {
+        this.debugDivElementManager = new DebugDivElementManager(25, 25);
+        this.debugDivElementManager.addNamedElementPlaceholders([
+            "GameCameraLocation",
+            "DebugCameraLocation",
+            "PlayerLocation",            
+            "AudioListener",
+            "Player1Speed",
+            "Player1BulletSoundLocation",
+            "Player1RocketSoundLocation",
+            "Objective",
+            "ParticleCount",
+            "FlamethrowerParticleCount",
+            "PhysicsObjectCount",
+            "LightObjectCount",
+
+            "ParticleEmitterCount",
+            "AnimatedSpriteCount",
+            "GrassBillboardsCount",
+            "CpuParticleCount",
+            "GpuParticleCount",
+            "RendererTotalGeometry",
+            "RendererTotalTextures",
+            "RendererTotalPrograms",
+            "TraverseTotalTextures",
+            "cpuOverrideBehavior",
+            
+            "player2Status",
+            "player2Target",
+
+            "player3Status",
+            "player3Target",
+
+            "player4Status",
+            "player4Target",
+            "QuadtreeTerrain",
+
+            "Player1_currentMaxWheelSlip",
+            "PositionalSounds"
+            //"Player1_Front_Right_WheelSlip",
+            //"Player1_Back_Left_WheelSlip",
+            //"Player1_Back_Right_WheelSlip"
+        ]);
+        this.debugDivElementManager.hideAllElements();
+    }
+
+    private updateDebugDivElements() {
 
         if(this.debugDivElementManager == null) return;
 
@@ -2060,7 +2049,7 @@ export default class GameScene extends THREE.Scene {
         //this.debugDivElementManager.updateElementText("TraverseTotalTextures", `Total Textures: ${textureCount}`);
     }
     
-    generateInstancedMeshTrees() {
+    private generateInstancedMeshTrees() {
         
         let cylinderGeometry = new THREE.CylinderGeometry(0.1, 2, 5);
         let cylinderMaterial = new THREE.MeshBasicMaterial();

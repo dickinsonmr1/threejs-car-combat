@@ -43,7 +43,6 @@ import soundEffectLibraryJson from '../gameobjects/audio/config/soundEffectLibra
 import { SoundEffectConfig } from '../gameobjects/audio/config/soundEffectLibrary';
 import { AnimatedShaderSprite } from '../gameobjects/fx/animatedShaderSprite';
 import { ExplosionGpuParticleEmitter } from '../gameobjects/fx/explosionGpuParticleEmitter';
-import { Lightning, LightningType } from '../gameobjects/weapons/lightning';
 import VehicleLibrary from '../gameobjects/vehicles/config/vehicleLibrary';
 import KeyboardState from './keyboardState';
 import { IPrecipitationSystem } from '../gameobjects/world/IPrecipitationSystem';
@@ -97,10 +96,6 @@ export default class GameScene extends THREE.Scene {
     public getClock(): THREE.Clock {
         return this.clock;
     }
-    
-    //lightningMaterial!: THREE.ShaderMaterial;
-    //lightningMaterial2!: THREE.ShaderMaterial;
-    //sphereMaterial!: THREE.ShaderMaterial;
 
     public getAudioManager(): AudioManager {
         return this.audioManager;
@@ -118,7 +113,7 @@ export default class GameScene extends THREE.Scene {
 
     private pickups: PickupObject2[] = [];
 
-    public weaponManager: WeaponManager = new WeaponManager();
+    public weaponManager: WeaponManager = new WeaponManager(this);
     private projectiles: Projectile[] = [];
 
     private particleEmitters: ParticleEmitter[] = [];
@@ -177,13 +172,6 @@ export default class GameScene extends THREE.Scene {
 
     sonicPulseEmitters: SonicPulseEmitter[] = [];
 
-    lightningWeapons: Lightning[] = [
-        new Lightning(this, LightningType.Line, 5),
-        new Lightning(this, LightningType.Line, 5),
-        new Lightning(this, LightningType.CircleVertical, 1.5),
-        new Lightning(this, LightningType.CircleHorizontal, 1.5)
-    ];
-    
     terrainChunk!: TerrainChunk;
     LODTerrainSystem!: LODTerrainSystem;
     quadtreeTerrainSystem5!: QuadtreeTerrainSystem5;
@@ -906,7 +894,7 @@ export default class GameScene extends THREE.Scene {
         this.pickups.push(item);
     }
 
-    private async generateRandomExplosion(
+    public async generateRandomExplosion(
         projectileType: ProjectileType,
         position: THREE.Vector3,
         lightColor: THREE.Color,
@@ -1463,64 +1451,6 @@ export default class GameScene extends THREE.Scene {
         this.dumpsters = this.dumpsters.filter(x => !x.shouldRemove);
     }
 
-    private checkFlamethrowerForCollision() {
-        
-        this.allPlayers.forEach(player => {
-            
-            var anyHits = false;
-            if(player.flamethrowerActive) {
-
-                var enemyPlayers = this.allPlayers.filter(x => x.playerId != player.playerId);
-                enemyPlayers.forEach(enemy => {
-                                        
-                    const flamethrowerBoundingBox = new THREE.Box3().setFromObject(player.flamethrowerBoundingBox);
-                    var enemyBoundingBox = new THREE.Box3().setFromObject(enemy.getVehicleObject().getChassis().mesh);
-
-                    if(flamethrowerBoundingBox != null && enemyBoundingBox != null && flamethrowerBoundingBox?.intersectsBox(enemyBoundingBox)){
-                        enemy.tryDamageWithFlamethrower();
-                        player.boundingMeshMaterial.color.set(0xff0000);
-                        anyHits = true;
-                    }
-                });
-            }
-            if(!anyHits) {
-                player.boundingMeshMaterial.color.set(0xffffff);
-            }
-        });
-    }
-
-    private checkLightningForCollision() {
-         this.allPlayers.forEach(player => {
-            
-            var anyHits = false;
-            if(player.lightningActive) {
-
-                var enemyPlayers = this.allPlayers.filter(x => x.playerId != player.playerId);
-                enemyPlayers.forEach(enemy => {
-                                        
-                    const boundingMesh = new THREE.Box3().setFromObject(player.lightningBoundingMesh);
-                    var enemyBoundingBox = new THREE.Box3().setFromObject(enemy.getVehicleObject().getChassis().mesh);
-
-                    if(boundingMesh != null && enemyBoundingBox != null && boundingMesh?.intersectsBox(enemyBoundingBox)){
-                        enemy.tryDamageWithLightning();
-                                                
-                        this.lightningWeapons[2].update(this, enemy.getPosition(), enemy.getModelQuaternion());                        
-                        this.lightningWeapons[2].meshGroup.visible = true;
-
-                        this.lightningWeapons[3].update(this, enemy.getPosition(), enemy.getModelQuaternion());                        this.lightningWeapons[3].meshGroup.visible = true;
-                        this.lightningWeapons[3].meshGroup.visible = true;
-
-                        player.boundingMeshMaterial.color.set(0xff0000);
-                        anyHits = true;
-                    }
-                });
-            }
-            if(!anyHits) {
-                player.boundingMeshMaterial.color.set(0xffffff);
-            }
-        });
-    }
-
     private checkKilldozerShovelForCollision() {
         this.allPlayers.forEach(player => {
             
@@ -1740,29 +1670,6 @@ export default class GameScene extends THREE.Scene {
         this.sphere?.update();
         this.cylinder?.update();
 
-        if(this.player1.lightningActive) {
-            for(let i = 0; i < 2; i++) {                
-                let worldPos = new THREE.Vector3();
-                switch(i) {
-                    case 0:
-                        this.player1.headLights.mesh1.getWorldPosition(worldPos);
-                        break;
-                    case 1:
-                        this.player1.headLights.mesh2.getWorldPosition(worldPos);
-                        break;
-                    default:
-                        break;
-                        //worldPos.copy(this.player1.getPosition());
-                        //break;
-                }                
-                this.lightningWeapons[i].update(this, worldPos, this.player1.getModelQuaternion());
-                this.lightningWeapons[i].meshGroup.visible = true;
-            }
-        }
-        else {
-            this.lightningWeapons.forEach(x => x.meshGroup.visible = false);
-        }
-
         let time = this.clock.getDelta();
         
         this.animatedSprites.forEach(x => x.update(time));
@@ -1789,8 +1696,8 @@ export default class GameScene extends THREE.Scene {
 
         this.checkProjectilesForCollision();
         //this.checkFlamethrowerForCollision();
-        this.checkLightningForCollision();
-        this.checkKilldozerShovelForCollision();
+        //this.checkLightningForCollision();
+        //this.checkKilldozerShovelForCollision();
         this.checkPickupsForCollisionWithPlayers();
         this.checkDumpstersForCollision();
 
@@ -1812,7 +1719,7 @@ export default class GameScene extends THREE.Scene {
         this.particleEmitters.forEach(x => x.update(this.clock));
         this.particleEmitters = this.particleEmitters.filter(x => !x.isDead);
 
-        this.weaponManager.update();
+        this.weaponManager.update(this.player1);
 
         //this.flamethrowerEmitters.forEach(x => x.update());
         this.sonicPulseEmitters.forEach(x => x.update());

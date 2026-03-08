@@ -11,7 +11,7 @@ export class WeaponManager {
 
     public flamethrowerEmitters: FlamethrowerEmitter[] = [];
     public sonicPulseEmitters: SonicPulseEmitter[] = [];
-    private dumpsters: DumpsterFireObject[] = [];
+    public dumpsters: DumpsterFireObject[] = [];
 
     lightningWeapons: Lightning[] = [];// = [
         //new Lightning(this, LightningType.Line, 5),
@@ -30,7 +30,9 @@ export class WeaponManager {
         this.lightningWeapons.push(new Lightning(scene, LightningType.CircleHorizontal, 1.5));
     }
 
-    public update(player1: Player) {
+    // TODO: move "generate weapon" methods from GameScene -> here
+
+    public update(player1: Player, clock: THREE.Clock) {
         this.flamethrowerEmitters.forEach(x => x.update());
 
         // update lightning
@@ -56,6 +58,9 @@ export class WeaponManager {
             else {
                 this.lightningWeapons.forEach(x => x.meshGroup.visible = false);
             }
+
+        this.dumpsters.forEach(x => x.update(clock));
+        this.sonicPulseEmitters.forEach(x => x.update());
     }
 
     public checkAllWeaponsForCollision(allPlayers: Player[]) {
@@ -161,5 +166,40 @@ export class WeaponManager {
     }
 
     private checkDumpstersForCollision(allPlayers: Player[]) {
+        this.dumpsters.forEach(dumpster => {        
+            if(dumpster.shouldRemove) {
+                //dumpster.kill();
+                //dumpster.group.children.forEach(x => this.remove(x));
+                //this.remove(dumpster.group);      
+            }
+            else
+            {
+                let playersToCheck = allPlayers.filter(x => x.playerId != dumpster.playerId);
+                playersToCheck.forEach(player => {
+                    if(player.getPosition().distanceTo(dumpster.getPosition()) < 2 && player.currentHealth > 0){
+
+                        this.scene.generateRandomExplosion(
+                            ProjectileType.Rocket,
+                            dumpster.getPosition(),
+                        new THREE.Color('white'),
+                        new THREE.Color('white'),
+                        new THREE.Color('yellow'),
+                        new THREE.Color('orange'),
+                        new THREE.Color('red')
+                        );
+                        dumpster.kill();
+                        this.scene.remove(dumpster.group);
+                        
+                        player.tryDamage(ProjectileType.Rocket, dumpster.getPosition());
+                        
+                        if(player.playerId == this.scene.player1.playerId) {
+                            this.scene.sceneController.updateHealthOnHud(this.scene.player1.currentHealth);
+                        }
+                    }
+                });
+            };            
+        });
+
+        this.dumpsters = this.dumpsters.filter(x => !x.shouldRemove);
     }        
 }

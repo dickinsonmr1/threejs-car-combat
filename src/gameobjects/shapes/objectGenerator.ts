@@ -10,7 +10,5 @@ export class ObjectGenerator {
 
     generateCube(randPosition?: THREE.Vector3, quaternion?: THREE.Quaternion) {
 
-    }
-
-    
+    }    
 }

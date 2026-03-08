@@ -108,7 +108,6 @@ export default class GameScene extends THREE.Scene {
 
     private cubes: BoxObject[] = [];
     private debrisWheels: GltfObject[] = [];
-    private dumpsters: DumpsterFireObject[] = [];
     private bouncyWheelMaterial!: CANNON.Material;
 
     private pickups: PickupObject2[] = [];
@@ -169,8 +168,6 @@ export default class GameScene extends THREE.Scene {
             }
             `
     });
-
-    sonicPulseEmitters: SonicPulseEmitter[] = [];
 
     terrainChunk!: TerrainChunk;
     LODTerrainSystem!: LODTerrainSystem;
@@ -340,8 +337,6 @@ export default class GameScene extends THREE.Scene {
         //this.animatedSprites.push(new AnimatedSprite(this, 'assets/spritesheets/explosion 4.png', 8, 8, 120, true, new THREE.Vector3(-2, 5, 5)));                
  
                 
-        //let sonicPulseEmitter = new SonicPulseEmitter(this, this.player1.getPosition());           
-        //this.sonicPulseEmitters.push(sonicPulseEmitter);
     }
 
     configurePhysics() {
@@ -802,12 +797,12 @@ export default class GameScene extends THREE.Scene {
             this.world,
             this.bouncyWheelMaterial
         );
-        this.dumpsters.push(dumpster);
+        this.weaponManager.dumpsters.push(dumpster);
     }    
 
     public async generateSonicPulse(position: THREE.Vector3) {
         let sonicPulse = new SonicPulseEmitter(this, position);
-        this.sonicPulseEmitters.push(sonicPulse);
+        this.weaponManager.sonicPulseEmitters.push(sonicPulse);
     }
     
     private async generateRandomPickup(mapWidth: number, mapHeight: number) {        
@@ -1411,80 +1406,7 @@ export default class GameScene extends THREE.Scene {
 
         this.projectiles = this.projectiles.filter(x => !x.shouldRemove);
     }
-
-    private checkDumpstersForCollision() { 
-        this.dumpsters.forEach(dumpster => {
-
-            if(dumpster.shouldRemove) {
-                //dumpster.kill();
-                //dumpster.group.children.forEach(x => this.remove(x));
-                //this.remove(dumpster.group);      
-            }
-            else
-            {
-                let playersToCheck = this.allPlayers.filter(x => x.playerId != dumpster.playerId);
-                playersToCheck.forEach(player => {
-                    if(player.getPosition().distanceTo(dumpster.getPosition()) < 2 && player.currentHealth > 0){
-
-                        this.generateRandomExplosion(
-                            ProjectileType.Rocket,
-                            dumpster.getPosition(),
-                        new THREE.Color('white'),
-                        new THREE.Color('white'),
-                        new THREE.Color('yellow'),
-                        new THREE.Color('orange'),
-                        new THREE.Color('red')
-                        );
-                        dumpster.kill();
-                        this.remove(dumpster.group);
-                        
-                        player.tryDamage(ProjectileType.Rocket, dumpster.getPosition());
-                        
-                        if(player.playerId == this.player1.playerId) {
-                            this.sceneController.updateHealthOnHud(this.player1.currentHealth);
-                        }
-                    }
-                });
-            };            
-        });
-
-        this.dumpsters = this.dumpsters.filter(x => !x.shouldRemove);
-    }
-
-    private checkKilldozerShovelForCollision() {
-        this.allPlayers.forEach(player => {
-            
-            var anyHits = false;
-            if(player.shovelCooldownClock.isRunningAndNotExpired() && player.currentShovelAngle > -Math.PI / 32) {
-
-                var enemyPlayers = this.allPlayers.filter(x => x.playerId != player.playerId);
-                enemyPlayers.forEach(enemy => {
-                                        
-                    const weaponBoundingBox = new THREE.Box3().setFromObject(player.shovelBoundingMesh);
-                    var enemyBoundingBox = new THREE.Box3().setFromObject(enemy.getVehicleObject().getChassis().mesh);
-
-                    if(weaponBoundingBox != null && enemyBoundingBox != null && weaponBoundingBox?.intersectsBox(enemyBoundingBox)){
-                        enemy.tryDamage(ProjectileType.Rocket, new THREE.Vector3(0,0,0));
-                        this.generateRandomExplosion(
-                            ProjectileType.Rocket,
-                                enemy.getPosition(),
-                                new THREE.Color('black'),
-                                new THREE.Color('black'),
-                                new THREE.Color('brown'),
-                                new THREE.Color('brown'),
-                                new THREE.Color('gray')
-                        );
-                        player.boundingMeshMaterial.color.set(0xff0000);
-                        anyHits = true;
-                    }
-                });
-            }
-            if(!anyHits) {
-                player.boundingMeshMaterial.color.set(0xffffff);
-            }
-        });
-    }
-
+    
     private checkPickupsForCollisionWithPlayers() {
         this.pickups.forEach(pickup => {
             this.allPlayers.forEach(player => {
@@ -1678,10 +1600,9 @@ export default class GameScene extends THREE.Scene {
         this.shaderAnimatedSprites.forEach(x => x.update(time))
         
         this.cubes.forEach(x => x.update());
-
         this.debrisWheels.forEach(x => x.update());
 
-        this.dumpsters.forEach(x => x.update(this.clock));
+        //this.dumpsters.forEach(x => x.update(this.clock));
 
         this.pickups.forEach(x => x.update());
 
@@ -1695,11 +1616,7 @@ export default class GameScene extends THREE.Scene {
         this.weaponManager.checkAllWeaponsForCollision(this.allPlayers);
 
         this.checkProjectilesForCollision();
-        //this.checkFlamethrowerForCollision();
-        //this.checkLightningForCollision();
-        //this.checkKilldozerShovelForCollision();
         this.checkPickupsForCollisionWithPlayers();
-        this.checkDumpstersForCollision();
 
         this.world.contacts.forEach((contact) => {
             if ((contact.bi === this.player1.getChassisBody() && contact.bj === this.player2.getChassisBody()) || 
@@ -1719,10 +1636,7 @@ export default class GameScene extends THREE.Scene {
         this.particleEmitters.forEach(x => x.update(this.clock));
         this.particleEmitters = this.particleEmitters.filter(x => !x.isDead);
 
-        this.weaponManager.update(this.player1);
-
-        //this.flamethrowerEmitters.forEach(x => x.update());
-        this.sonicPulseEmitters.forEach(x => x.update());
+        this.weaponManager.update(this.player1, this.clock);
 
         let player1Position = this.player1.getPosition();
         this.allPlayers.forEach(player => {

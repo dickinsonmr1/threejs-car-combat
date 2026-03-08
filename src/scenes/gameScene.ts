@@ -50,6 +50,7 @@ import { IPrecipitationSystem } from '../gameobjects/world/IPrecipitationSystem'
 import { PrecipitationSystemGpu } from '../gameobjects/world/precipitationSystemGpu';
 import { GpuRainMinimal } from '../gameobjects/world/gpuRainMinimal';
 import { Geometry } from 'three/examples/jsm/deprecated/Geometry.js';
+import { WeaponManager } from '../gameobjects/weapons/weaponManager';
 
 // npm install cannon-es-debugger
 // https://youtu.be/Ht1JzJ6kB7g?si=jhEQ6AHaEjUeaG-B&t=291
@@ -116,6 +117,8 @@ export default class GameScene extends THREE.Scene {
     private bouncyWheelMaterial!: CANNON.Material;
 
     private pickups: PickupObject2[] = [];
+
+    public weaponManager: WeaponManager = new WeaponManager();
     private projectiles: Projectile[] = [];
 
     private particleEmitters: ParticleEmitter[] = [];
@@ -210,7 +213,7 @@ export default class GameScene extends THREE.Scene {
 
     spotlight?: SpotlightObject;
 
-    flamethrowerEmitters: FlamethrowerEmitter[] = [];
+    //flamethrowerEmitters: FlamethrowerEmitter[] = [];
 
     sceneController: SceneController;
 
@@ -390,12 +393,16 @@ export default class GameScene extends THREE.Scene {
         if(this.gameConfig.isDebug) 
             this.createDebugDivElements();
 
+        this.setStyles();
+    }   
+
+    private setStyles() {
         document.getElementById('notificationDiv')!.innerHTML = `<i class="fa-solid fa-location-dot"></i> Objective: Destroy all enemies!`;
         document.getElementById('notificationDiv')!.style.opacity = '80%';            
         setTimeout(() => {
             document.getElementById('notificationDiv')!.style.opacity = '0%';
         }, 2000);
-    }   
+    }
 
     public processInput(keyboardState: KeyboardState) {
 
@@ -740,9 +747,9 @@ export default class GameScene extends THREE.Scene {
         this.particleEmitters.push(emitter);
     }
 
-    public addToFlamethrowerEmitters(emitter: FlamethrowerEmitter) {
-        this.flamethrowerEmitters.push(emitter);
-    }
+    //public addToFlamethrowerEmitters(emitter: FlamethrowerEmitter) {
+        //this.flamethrowerEmitters.push(emitter);
+    //}
 
     private async generateRandomCube() {
         let randPosition = new THREE.Vector3(randFloat(-10, 10), 5, randFloat(-10, -10));
@@ -1453,7 +1460,7 @@ export default class GameScene extends THREE.Scene {
             };            
         });
 
-        this.projectiles = this.projectiles.filter(x => !x.shouldRemove);
+        this.dumpsters = this.dumpsters.filter(x => !x.shouldRemove);
     }
 
     private checkFlamethrowerForCollision() {
@@ -1577,14 +1584,14 @@ export default class GameScene extends THREE.Scene {
         return position;
     }
 
-    private updateWater() {
+    public updateWater() {
         if(!this.water)
             return;
 
         this.water.material.uniforms[ 'time' ].value += 0.5 / 60.0;
     }
 
-    private updatePrecipitation() {
+    public updatePrecipitation() {
         if(this.precipitationSystem != null) {
 
             const time = this.clock.getDelta();
@@ -1592,11 +1599,11 @@ export default class GameScene extends THREE.Scene {
         }
     }
 
-    private preUpdate() {
+    public preUpdate() {
         this.allPlayers.forEach(player => player.preUpdate());
     }
 
-    private update() {
+    public update() {
         if(this.world != null) {
             //// called in main.ts
             //this.world.fixedStep();
@@ -1778,8 +1785,10 @@ export default class GameScene extends THREE.Scene {
 
         //this.rainShaderParticleEmitter.update();
 
+        this.weaponManager.checkAllWeaponsForCollision(this.allPlayers);
+
         this.checkProjectilesForCollision();
-        this.checkFlamethrowerForCollision();
+        //this.checkFlamethrowerForCollision();
         this.checkLightningForCollision();
         this.checkKilldozerShovelForCollision();
         this.checkPickupsForCollisionWithPlayers();
@@ -1803,7 +1812,9 @@ export default class GameScene extends THREE.Scene {
         this.particleEmitters.forEach(x => x.update(this.clock));
         this.particleEmitters = this.particleEmitters.filter(x => !x.isDead);
 
-        this.flamethrowerEmitters.forEach(x => x.update());
+        this.weaponManager.update();
+
+        //this.flamethrowerEmitters.forEach(x => x.update());
         this.sonicPulseEmitters.forEach(x => x.update());
 
         let player1Position = this.player1.getPosition();
@@ -1855,7 +1866,7 @@ export default class GameScene extends THREE.Scene {
         this.audioManager.update(this.camera.position);
     }
    
-    private updateLODTerrain() {
+    public updateLODTerrain() {
         if(!this.LODTerrainSystem)
             return;
 
@@ -1866,7 +1877,7 @@ export default class GameScene extends THREE.Scene {
         
     }
 
-    private updateQuadtreeTerrain5() {
+    public updateQuadtreeTerrain5() {
         if(!this.quadtreeTerrainSystem5)
             return;
 
@@ -1924,7 +1935,7 @@ export default class GameScene extends THREE.Scene {
         this.debugDivElementManager.hideAllElements();
     }
 
-    private updateDebugDivElements() {
+    public updateDebugDivElements() {
 
         if(this.debugDivElementManager == null) return;
 
@@ -1948,7 +1959,7 @@ export default class GameScene extends THREE.Scene {
         
         // flamethrower particles
         let flameThrowerEmitterTotalParticleCount: number = 0;
-        this.flamethrowerEmitters.forEach(x => {
+        this.weaponManager.flamethrowerEmitters.forEach(x => {
             flameThrowerEmitterTotalParticleCount += x.sprites.length;
         });
         this.debugDivElementManager.updateElementText("FlamethrowerParticleCount", `Flamethrower particles (sprites): ${flameThrowerEmitterTotalParticleCount}`);

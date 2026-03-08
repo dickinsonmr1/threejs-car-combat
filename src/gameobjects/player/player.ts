@@ -292,7 +292,7 @@ export class Player {
             new THREE.Vector3(0, 1, 0),
             5
         );
-        gameScene.addToFlamethrowerEmitters(this.flamethrowerEmitter);
+        gameScene.weaponManager.flamethrowerEmitters.push(this.flamethrowerEmitter);
 
         this.playerColor = playerColor;
         this.target = new Target(scene, crosshairTexture, playerColor, new THREE.Vector3(0,0,0), 0.075, true);

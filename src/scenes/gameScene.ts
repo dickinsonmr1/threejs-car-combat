@@ -1456,23 +1456,83 @@ export default class GameScene extends THREE.Scene {
     }
 
     public update() {
+
+        let time = this.clock.getDelta();
+
         if(this.world != null) {
             //// called in main.ts
             //this.world.fixedStep();
         }
-        this.traverse(x => {
-        
-        });
-        
-        this.traverseVisible(x => {
-            
-        });
+        this.traverse(x => {});        
+        this.traverseVisible(x => {});
 
         if(!this.player1 || this.player1.isVehicleObjectNull() || this.isPaused) return;
+               
+        this.updateCpuAI();
 
-        //this.updateInput(this.sceneController.keyDown);        
+        this.updateCamera(); 
         
+        this.terrainChunk?.update();
+        // TODO: figure out where best to update quadtree LOD
 
+        this.cube?.update();
+        this.cube2?.update();
+        this.sphere?.update();
+        this.cylinder?.update();
+        
+        this.animatedSprites.forEach(x => x.update(time));
+        this.animatedSprites = this.animatedSprites.filter(x => x.isAlive);    
+        this.shaderAnimatedSprites.forEach(x => x.update(time))
+        
+        this.cubes.forEach(x => x.update());
+        this.debrisWheels.forEach(x => x.update());
+
+        this.pickups.forEach(x => x.update());
+
+        this.projectiles.forEach(x => x.update());
+
+        this.fireParticleEmitters.forEach(x => x.update(this.clock));
+        this.fireParticleEmitters.forEach(x => x.setEmitPosition(new THREE.Vector3(-3, 2.5, -3)));
+
+        //this.rainShaderParticleEmitter.update();
+
+        this.weaponManager.checkAllWeaponsForCollision(this.allPlayers);
+
+        this.checkProjectilesForCollision();
+        this.checkPickupsForCollisionWithPlayers();
+
+        this.world.contacts.forEach((contact) => {
+            if ((contact.bi === this.player1.getChassisBody() && contact.bj === this.player2.getChassisBody()) || 
+                (contact.bj === this.player1.getChassisBody() && contact.bi === this.player2.getChassisBody())) {
+                console.log('Collision detected between player 1 and player 2');
+                // Perform additional collision handling logic here
+        }
+        });
+
+        if(this.cube != null) 
+        {
+            //this.spotlight?.setPosition(this.cube?.mesh.position);
+        }       
+
+        this.spotlight?.update();
+
+        this.particleEmitters.forEach(x => x.update(this.clock));
+        this.particleEmitters = this.particleEmitters.filter(x => !x.isDead);
+
+        this.weaponManager.update(this.player1, this.clock);
+  
+        this.updateHealthBarsAndCrosshairs();
+
+        this.camera.updateMatrixWorld(true);
+
+        if(this.gameConfig.isDebug)
+            this.createDebugDivElements();
+        //this.stats.update();
+
+        this.audioManager.update(this.camera.position);
+    }
+   
+    private updateCpuAI() {
         var cpuPlayers = this.allPlayers.filter(x => x.isCpuPlayer);// && x.playerState == PlayerState.Alive);
         for(var i = 0; i < cpuPlayers.length; i++) {
             
@@ -1580,63 +1640,9 @@ export default class GameScene extends THREE.Scene {
                     cpuPlayer.tryStopFireFlamethrower();
             }
         }
+    }
 
-        this.updateCamera(); 
-        
-        this.terrainChunk?.update();
-
-        // TODO: figure out where best to update quadtree LOD
-
-        this.cube?.update();
-        this.cube2?.update();
-        this.sphere?.update();
-        this.cylinder?.update();
-
-        let time = this.clock.getDelta();
-        
-        this.animatedSprites.forEach(x => x.update(time));
-        this.animatedSprites = this.animatedSprites.filter(x => x.isAlive);
-    
-        this.shaderAnimatedSprites.forEach(x => x.update(time))
-        
-        this.cubes.forEach(x => x.update());
-        this.debrisWheels.forEach(x => x.update());
-
-        //this.dumpsters.forEach(x => x.update(this.clock));
-
-        this.pickups.forEach(x => x.update());
-
-        this.projectiles.forEach(x => x.update());
-
-        this.fireParticleEmitters.forEach(x => x.update(this.clock));
-        this.fireParticleEmitters.forEach(x => x.setEmitPosition(new THREE.Vector3(-3, 2.5, -3)));
-
-        //this.rainShaderParticleEmitter.update();
-
-        this.weaponManager.checkAllWeaponsForCollision(this.allPlayers);
-
-        this.checkProjectilesForCollision();
-        this.checkPickupsForCollisionWithPlayers();
-
-        this.world.contacts.forEach((contact) => {
-            if ((contact.bi === this.player1.getChassisBody() && contact.bj === this.player2.getChassisBody()) || 
-                (contact.bj === this.player1.getChassisBody() && contact.bi === this.player2.getChassisBody())) {
-                console.log('Collision detected between player 1 and player 2');
-                // Perform additional collision handling logic here
-        }
-        });
-
-        if(this.cube != null) 
-        {
-            //this.spotlight?.setPosition(this.cube?.mesh.position);
-        }       
-
-        this.spotlight?.update();
-
-        this.particleEmitters.forEach(x => x.update(this.clock));
-        this.particleEmitters = this.particleEmitters.filter(x => !x.isDead);
-
-        this.weaponManager.update(this.player1, this.clock);
+    private updateHealthBarsAndCrosshairs() {
 
         let player1Position = this.player1.getPosition();
         this.allPlayers.forEach(player => {
@@ -1644,7 +1650,7 @@ export default class GameScene extends THREE.Scene {
             let distance = player1Position.distanceTo(player.getPosition());
             this.sceneController.hudScene?.updateMeshHealthBar(player.playerId, player.currentHealth, distance);
         });
-    
+
         if(!this.player1.isModelNull() && this.crosshairSprite != null) {
             let forwardVector = new THREE.Vector3(-10, 0, 0);
             forwardVector.applyQuaternion(this.player1.getModelQuaternion());
@@ -1677,16 +1683,8 @@ export default class GameScene extends THREE.Scene {
                 this.crosshairSprite.material.color.set(new THREE.Color('white'));
             }        
         }                
-
-        this.camera.updateMatrixWorld(true);
-
-        if(this.gameConfig.isDebug)
-            this.createDebugDivElements();
-        //this.stats.update();
-
-        this.audioManager.update(this.camera.position);
     }
-   
+
     public updateLODTerrain() {
         if(!this.LODTerrainSystem)
             return;

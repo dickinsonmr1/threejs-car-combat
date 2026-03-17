@@ -942,7 +942,7 @@ export default class SceneController {
             if(gameConfig.isDebug && cannonDebugger != null)
               cannonDebugger.update();
       
-            renderer.clear();
+            //renderer.clear();
             renderer.render(scene, mainCamera);
             renderer.clearDepth();
             

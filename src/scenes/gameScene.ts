@@ -1909,6 +1909,6 @@ export default class GameScene extends THREE.Scene {
             instancedCylinderMesh.setMatrixAt(i, matrix);
             instancedCylinderMesh.setColorAt(i, new THREE.Color(Math.random(), Math.random(), Math.random()));
         }
-        instancedCylinderMesh.instanceMatrix.needsUpdate = true;
+        instancedCylinderMesh.instanceMatrix.needsUpdate = false;
     }
 }

@@ -17,8 +17,14 @@ const width = window.innerWidth;
 const height = window.innerHeight;
 
 const renderer = new THREE.WebGLRenderer({
-  canvas: document.getElementById('app') as HTMLCanvasElement
+  canvas: document.getElementById('app') as HTMLCanvasElement,
+  precision: 'mediump',
+  powerPreference: "high-performance",
+  antialias: false,
+  stencil: true  
 });
+
+renderer.setPixelRatio(1);
 
 if(gameConfig.overrideRenderResolution)
   renderer.setSize(gameConfig.renderResolutionOverrideX ?? window.innerWidth, gameConfig.renderResolutionOverrideY ?? window.innerHeight);
@@ -27,8 +33,9 @@ else
 
 renderer.domElement.style.width = "100%";  // scaled to window
 renderer.domElement.style.height = "100%";
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = false;
 renderer.outputColorSpace = 'srgb';
+renderer.xr.enabled = false;
 
 // https://threejs.org/examples/?q=sprites#webgl_sprites
 renderer.autoClear = false; // To allow render overlay
